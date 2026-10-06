@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>株式会社STR 社内ポータルサイト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        html { scroll-behavior: smooth; scroll-padding-top: 9rem; }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        :focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; border-radius: 0.75rem; }
+        @media print { .no-print { display: none !important; } body { background: #fff; } }
+        .fade-in { animation: fade .25s ease-out both; }
+        @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        details > summary { list-style: none; cursor: pointer; }
+        details > summary::-webkit-details-marker { display: none; }
+        .wrap-any { overflow-wrap: anywhere; word-break: break-word; }
+        .price-item { min-width: 0; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- ヘッダー -->
+    <header class="bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+            <a href="#top" class="flex items-center gap-2.5 min-w-0 group">
+                <span class="bg-amber-500 text-slate-900 font-black px-2.5 py-1.5 rounded-xl text-sm shadow-sm shrink-0">STR</span>
+                <span class="min-w-0">
+                    <span class="block font-bold text-base text-slate-900 leading-tight truncate group-hover:text-amber-600 transition">社内ポータルサイト</span>
+                    <span class="block text-[11px] text-slate-500 leading-tight">株式会社STR</span>
+                </span>
+            </a>
+            <div class="flex items-center gap-2 shrink-0">
+                <div class="hidden md:flex items-center gap-1.5 text-xs text-slate-600 font-semibold bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">
+                    <i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span id="headerOrg">ユメノバ / 催事事業部</span>
+                </div>
+                <button onclick="toggleAdminMode()" id="adminModeBtn"
+                        class="bg-slate-900 hover:bg-slate-800 text-amber-400 text-xs font-bold h-10 px-3.5 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                    <i data-lucide="shield" class="w-4 h-4"></i>
+                    <span id="adminBtnText" class="hidden sm:inline">管理者モード切替</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- セクションナビ -->
+    <nav class="no-print bg-white border-b border-slate-200 sticky top-16 z-40">
+        <div class="max-w-6xl mx-auto px-4">
+            <ul id="sectionNav" class="flex gap-1.5 overflow-x-auto no-scrollbar py-2.5 text-xs font-bold"></ul>
+        </div>
+    </nav>
+
+    <main id="top" class="max-w-6xl mx-auto px-4 py-6 space-y-8 flex-grow w-full">
+
+        <!-- 管理者バー（管理者モード時のみ） -->
+        <section id="adminBar" class="hidden bg-slate-900 text-white rounded-2xl shadow-lg border border-amber-500/40 p-5 sm:p-6 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3.5">
+                <div class="flex items-center gap-2 text-amber-400 font-black text-base">
+                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                    <span>管理者モード：データ管理</span>
+                </div>
+                <span class="text-xs bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-lg border border-amber-500/30 font-bold">管理者モード中</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                各セクションに「＋追加」「編集」「削除」ボタンが表示されます。内容はこの端末のブラウザに自動保存され、下のボタンでJSONファイルとして書き出し・読み込みができます。「変更を元に戻す」で直前の操作を取り消せます（最大30件）。
+            </p>
+            <div class="flex flex-wrap gap-2.5">
+                <button type="button" onclick="undoLast()" id="undoBtn"
+                        class="h-11 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 text-xs font-bold transition flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i data-lucide="undo-2" class="w-4 h-4"></i><span>変更を元に戻す</span><span id="undoCount" class="tabular-nums text-amber-400"></span>
+                </button>
+                <button onclick="exportData()" class="h-11 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-black transition flex items-center gap-2">
+                    <i data-lucide="download" class="w-4 h-4"></i><span>JSONエクスポート</span>
+                </button>
+                <label class="h-11 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 text-xs font-bold transition flex items-center gap-2 cursor-pointer">
+                    <i data-lucide="upload" class="w-4 h-4"></i><span>JSONインポート</span>
+                    <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+                </label>
+                <button onclick="resetData()" class="h-11 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-bold transition flex items-center gap-2">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i><span>初期データに戻す</span>
+                </button>
+            </div>
+            <div id="categoryManager" class="bg-slate-800/60 rounded-2xl p-4 space-y-3"></div>
+        </section>
+
+        <!-- ウェルカム -->
+        <section class="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-6 sm:p-8 shadow-lg">
+            <div class="grid md:grid-cols-[1.35fr_1fr] gap-6 items-center">
+                <div>
+                    <p class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-full">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span id="heroOrg">株式会社STR ／ ユメノバ 催事事業部</span>
+                    </p>
+                    <h2 class="mt-3 text-xl sm:text-2xl font-black leading-snug text-white">社内ポータルサイトへようこそ</h2>
+                    <p class="mt-2 text-sm text-slate-300 leading-relaxed">
+                        勤怠・連絡ルール、社内発信、売価設定表、開店・閉店業務、経費申請をこの1ページにまとめています。
+                    </p>
+                    <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-400 font-semibold">
+                        <span class="inline-flex items-center gap-1.5"><i data-lucide="calendar-days" class="w-4 h-4 text-amber-400"></i>本日：<span id="todayDate" class="text-white">-</span></span>
+                        <span class="inline-flex items-center gap-1.5"><i data-lucide="users" class="w-4 h-4 text-amber-400"></i>全メンバー共通ルールあり</span>
+                    </div>
+                </div>
+                <div class="bg-white/95 rounded-2xl p-3 shadow-inner">
+                    <svg viewBox="0 0 420 200" class="w-full h-auto" role="img" aria-label="催事買取ブースのイラスト">
+                        <defs>
+                            <linearGradient id="heroGlow" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#f59e0b" stop-opacity=".20"/>
+                                <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="0" y="0" width="420" height="200" rx="18" fill="url(#heroGlow)"/>
+                        <ellipse cx="212" cy="176" rx="150" ry="11" fill="#0f172a" opacity=".10"/>
+                        <path d="M104 78h212l-18-34H122z" fill="#fbbf24"/>
+                        <path d="M104 78h212v12H104z" fill="#f59e0b"/>
+                        <g fill="#fffbeb" opacity=".9">
+                            <path d="M143.4 44h21.3l-9.8 34h-25.5z"/>
+                            <path d="M186.1 44h21.3l-1.6 34h-25.5z"/>
+                            <path d="M228.8 44h21.4l6.4 34h-25.4z"/>
+                            <path d="M271.5 44h21.4l14.6 34h-25.4z"/>
+                        </g>
+                        <g fill="#fbbf24">
+                            <circle cx="121.7" cy="90" r="17.6"/>
+                            <circle cx="157" cy="90" r="17.6"/>
+                            <circle cx="192.3" cy="90" r="17.6"/>
+                            <circle cx="227.7" cy="90" r="17.6"/>
+                            <circle cx="263" cy="90" r="17.6"/>
+                            <circle cx="298.3" cy="90" r="17.6"/>
+                        </g>
+                        <rect x="118" y="112" width="184" height="14" rx="4" fill="#f1f5f9"/>
+                        <rect x="126" y="126" width="168" height="44" rx="7" fill="#1e293b"/>
+                        <rect x="150" y="138" width="56" height="20" rx="4" fill="#334155"/>
+                        <circle cx="160" cy="100" r="12" fill="#fcd34d" stroke="#f59e0b" stroke-width="2"/>
+                        <path d="M156 96h8M160 93v14M156 101h8" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="205" cy="98" r="11" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+                        <rect x="200" y="83" width="10" height="6" rx="2" fill="#94a3b8"/>
+                        <rect x="200" y="107" width="10" height="6" rx="2" fill="#94a3b8"/>
+                        <path d="M205 92v6l4 3" stroke="#475569" stroke-width="1.8" stroke-linecap="round"/>
+                        <rect x="232" y="94" width="34" height="24" rx="5" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+                        <rect x="236" y="89" width="11" height="6" rx="2" fill="#94a3b8"/>
+                        <circle cx="249" cy="106" r="7" fill="#94a3b8" stroke="#475569" stroke-width="1.6"/>
+                        <rect x="332" y="62" width="5" height="112" rx="2" fill="#94a3b8"/>
+                        <rect x="298" y="40" width="58" height="34" rx="9" fill="#ffffff" stroke="#f59e0b" stroke-width="2.5"/>
+                        <text x="327" y="63" text-anchor="middle" font-size="15" font-weight="700" fill="#b45309" font-family="system-ui, sans-serif">買取</text>
+                        <circle cx="370" cy="150" r="14" fill="none" stroke="#f59e0b" stroke-width="3.5"/>
+                        <path d="M380 160l11 11" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- 勤怠・連絡ルール -->
+        <section id="quick" class="scroll-mt-40 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-700"><i data-lucide="zap" class="w-4.5 h-4.5"></i></span>
+                    <h2 class="text-lg font-bold text-slate-900">勤怠・連絡ルール</h2>
+                </div>
+                <button data-act="add-quick" class="admin-only hidden h-10 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 text-xs font-bold transition items-center gap-1.5">
+                    <i data-lucide="plus" class="w-4 h-4"></i><span>カードを追加</span>
+                </button>
+            </div>
+            <div id="quickCards" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+            <div id="quickRules"></div>
+        </section>
+
+        <!-- 管理者用：新規お知らせ投稿パネル（初期は非表示） -->
+        <section id="adminPanel" class="hidden bg-slate-900 text-white rounded-2xl shadow-lg border border-amber-500/50 p-5 sm:p-6 space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                <div class="flex items-center gap-2 text-amber-400 font-black text-base">
+                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                    <span>管理者用：新規お知らせ・情報発信の投稿</span>
+                </div>
+                <span class="text-xs bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-lg border border-amber-500/30 font-bold">管理者モード中</span>
+            </div>
+            <form id="postForm" class="space-y-5 text-sm">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="space-y-2 sm:col-span-2">
+                        <label for="postTitle" class="block font-bold text-slate-200">お知らせタイトル <span class="text-rose-400">*</span></label>
+                        <input type="text" id="postTitle" required placeholder="例：【重要】今週の催事注意事項について"
+                               class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 h-12 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30">
+                    </div>
+                    <div class="space-y-2">
+                        <label for="postDate" class="block font-bold text-slate-200">発信日</label>
+                        <input type="date" id="postDate"
+                               class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 h-12 text-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label for="postCategory" class="block font-bold text-slate-200">カテゴリー</label>
+                        <select id="postCategory"
+                                class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 h-12 text-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30"></select>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="postImages" class="block font-bold text-slate-200">画像添付（複数可）</label>
+                        <input type="file" id="postImages" accept="image/*" multiple
+                               class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-slate-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-400 file:cursor-pointer cursor-pointer">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label for="postContent" class="block font-bold text-slate-200">内容・本文 <span class="text-rose-400">*</span></label>
+                        <span id="contentCount" class="text-xs text-slate-400 tabular-nums">0 文字</span>
+                    </div>
+                    <textarea id="postContent" rows="5" required placeholder="発信内容を入力してください..."
+                              class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3.5 text-white placeholder-slate-500 leading-relaxed focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30"></textarea>
+                    <div id="imagePreview" class="flex flex-wrap gap-2 pt-1"></div>
+                </div>
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-2">
+                    <button type="button" onclick="toggleAdminMode()"
+                            class="h-12 px-5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 text-sm font-bold transition">
+                        キャンセル
+                    </button>
+                    <button type="submit"
+                            class="h-12 px-6 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-900 font-black rounded-xl transition shadow flex items-center justify-center gap-2">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>ポータルサイトに投稿する</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- 新着情報・社内発信 -->
+        <section id="news" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-5 sm:p-6 space-y-4">
+                <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-2.5">
+                        <span class="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-700"><i data-lucide="bell" class="w-4.5 h-4.5"></i></span>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">新着情報・社内発信（通達・連絡）</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">※確認したらグループLINEでリアクション・返信を徹底！</p>
+                        </div>
+                    </div>
+                    <span id="postCount" class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full shrink-0">0 件</span>
+                </div>
+
+                <div class="no-print flex flex-wrap gap-2">
+                    <button type="button" data-view="recent" class="newsTab h-10 px-4 rounded-xl text-xs font-bold border transition"></button>
+                    <button type="button" data-view="category" class="newsTab h-10 px-4 rounded-xl text-xs font-bold border transition"></button>
+                </div>
+
+                <div class="no-print flex flex-col sm:flex-row gap-2.5">
+                    <div class="relative flex-1">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="search" id="postSearch" placeholder="キーワードで絞り込み（例：クレーム、身だしなみ）"
+                               class="w-full h-11 pl-10 pr-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30">
+                    </div>
+                    <select id="postFilter"
+                            class="h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30"></select>
+                </div>
+
+                <div id="postsContainer" class="space-y-3.5"></div>
+                <div id="archiveContainer" class="space-y-4"></div>
+                <p id="postsEmpty" class="hidden text-center text-sm text-slate-500 py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                    条件に一致する投稿はありません。
+                </p>
+            </div>
+        </section>
+
+        <!-- 売価設定表 -->
+        <section id="price" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 font-bold text-base">
+                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/15 text-amber-400"><i data-lucide="table" class="w-4.5 h-4.5"></i></span>
+                    <span id="priceTitle">株式会社STR 売価設定表（社外秘・2026/08/24作成）</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <div id="priceToolLinks" class="flex flex-wrap items-center gap-2"></div>
+                    <span class="text-xs text-amber-400 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 font-bold">営業メンバー必須</span>
+                    <button data-act="add-group" class="admin-only hidden h-9 px-3 rounded-lg bg-amber-500 text-slate-900 text-xs font-black transition items-center gap-1.5">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>大カテゴリー追加</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-5 sm:p-6 space-y-5">
+                <div id="priceTabs" class="no-print flex flex-wrap gap-2"></div>
+                <div class="no-print flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div class="relative flex-1">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="search" id="priceSearch" placeholder="品目で検索（例：切手、ZIPPO、銀貨、モンブラン）"
+                               class="w-full h-12 pl-10 pr-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30">
+                    </div>
+                    <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3.5 py-2.5 rounded-xl shrink-0">
+                        表示中 <span id="priceCount" class="text-slate-900 tabular-nums">0</span> 項目
+                    </span>
+                </div>
+
+                <div id="pricePanels" class="space-y-5"></div>
+                <p id="priceEmpty" class="hidden text-center text-sm text-slate-500 py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                    該当する品目が見つかりませんでした。
+                </p>
+                <div id="priceNotes"></div>
+            </div>
+        </section>
+
+        <!-- 外部ツール・リンク集 -->
+        <section id="links" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 font-bold text-base">
+                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-sky-500/15 text-sky-400"><i data-lucide="link" class="w-4.5 h-4.5"></i></span>
+                    <span>外部ツール・リンク集</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-sky-400 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 font-bold">査定・学習ツール</span>
+                    <button data-act="add-tool" class="admin-only hidden h-9 px-3 rounded-lg bg-amber-500 text-slate-900 text-xs font-black transition items-center gap-1.5">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>リンクを追加</span>
+                    </button>
+                </div>
+            </div>
+            <div class="p-5 sm:p-6 space-y-5">
+                <p class="text-xs text-slate-500 leading-relaxed">買取査定・相場確認・商品知識の学習などに使う外部サイトへのリンクです。管理者モードで「リンクを追加」から自由に追加・編集できます。</p>
+                <div id="toolCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+                <div id="toolNotes"></div>
+            </div>
+        </section>
+
+        <!-- 開店・閉店業務 -->
+        <section id="manual" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 font-bold text-base">
+                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500/15 text-emerald-400"><i data-lucide="list-checks" class="w-4.5 h-4.5"></i></span>
+                    <span>催事買取 開店・閉店業務まとめ（チェックリスト）</span>
+                </div>
+                <span class="text-xs text-emerald-400 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 font-bold">現場必須フロー</span>
+            </div>
+
+            <div class="p-5 sm:p-6 space-y-5">
+                <div class="no-print flex flex-wrap items-center justify-between gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                    <p class="text-xs text-slate-600 font-semibold flex items-center gap-2">
+                        <i data-lucide="info" class="w-4 h-4 text-slate-400"></i>
+                        チェック状態はこの端末に自動保存されます。
+                    </p>
+                    <button type="button" onclick="resetChecks()"
+                            class="h-10 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-xs font-bold text-slate-700 transition">
+                        すべてリセット
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div id="openCard"></div>
+                    <div id="closeCard"></div>
+                </div>
+                <div id="carryArea" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"></div>
+            </div>
+        </section>
+
+        <!-- 交通費・経費申請 -->
+        <section id="expense" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-2.5">
+                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-blue-100 text-blue-700"><i data-lucide="receipt" class="w-4.5 h-4.5"></i></span>
+                    <h2 class="text-lg font-bold text-slate-900">交通費・経費申請のご案内</h2>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="https://id.jobcan.jp/users/sign_in?app_key=atd" target="_blank" rel="noopener noreferrer"
+                       class="h-10 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition inline-flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="external-link" class="w-4 h-4"></i><span>ジョブカンで交通費申請</span>
+                    </a>
+                    <button data-act="add-exp" class="admin-only hidden h-10 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 text-xs font-bold transition items-center gap-1.5">
+                        <i data-lucide="plus" class="w-4 h-4"></i><span>項目を追加</span>
+                    </button>
+                </div>
+            </div>
+            <div id="expenseCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
+            <div id="expenseNotes"></div>
+        </section>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-slate-900 text-slate-400 text-sm py-8 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center space-y-2.5">
+            <p class="font-bold text-slate-200 text-base">株式会社STR 社内ポータルサイト</p>
+            <p class="text-xs" id="footerMeta">&copy; 株式会社STR All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- 汎用エディタ（モーダル） -->
+    <div id="modal" class="hidden fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="max-w-lg mx-auto my-8 bg-white rounded-2xl shadow-2xl overflow-hidden fade-in">
+            <div class="flex items-start justify-between gap-3 px-5 py-4 border-b border-slate-200">
+                <div>
+                    <h3 id="modalTitle" class="font-bold text-slate-900 text-base">編集</h3>
+                    <p id="modalDesc" class="text-xs text-slate-500 mt-0.5"></p>
+                </div>
+                <button type="button" onclick="closeEditor()" class="grid h-9 w-9 place-items-center rounded-xl hover:bg-slate-100 text-slate-500 transition shrink-0" aria-label="閉じる">
+                    <i data-lucide="x" class="w-4.5 h-4.5"></i>
+                </button>
+            </div>
+            <form id="modalForm" class="p-5 space-y-4 max-h-[65vh] overflow-y-auto"></form>
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 px-5 py-4 bg-slate-50 border-t border-slate-200">
+                <button type="button" onclick="closeEditor()" class="h-11 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-sm font-bold text-slate-700 transition">キャンセル</button>
+                <button type="submit" form="modalForm" class="h-11 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 text-sm font-black transition shadow">保存する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト -->
+    <div id="toast" class="no-print pointer-events-none fixed bottom-6 left-1/2 z-[80] -translate-x-1/2 translate-y-4 opacity-0 transition-all duration-300">
+        <div class="flex items-center gap-2.5 rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-bold text-white shadow-2xl">
+            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>
+            <span id="toastText">投稿しました</span>
+        </div>
+    </div>
+
+    <!-- トップへ戻る -->
+    <a href="#top" id="toTop"
+       class="no-print fixed bottom-6 right-5 z-[60] grid h-12 w-12 place-items-center rounded-full bg-slate-900 text-amber-400 shadow-lg opacity-0 translate-y-4 pointer-events-none transition-all duration-300"
+       aria-label="ページ上部へ戻る">
+        <i data-lucide="arrow-up" class="w-5 h-5"></i>
+    </a>
+
+    <script>
+/* ============================================================
+   株式会社STR 社内ポータルサイト — アプリケーションロジック
+   ・データはブラウザ（localStorage）に保存
+   ・管理者モードで各セクションの追加／編集／削除が可能
+   ============================================================ */
+
+/* ---------- 基本ユーティリティ ---------- */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const clone = x => JSON.parse(JSON.stringify(x));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = p => p + Math.random().toString(36).slice(2, 9);
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const fmtJP = iso => {
+  if (!iso) return '';
+  const d = new Date(String(iso).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d.getTime())) return String(iso);
+  return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
+};
+const daysSince = iso => {
+  const d = new Date(String(iso).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d.getTime())) return 0;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+};
+
+/* ---------- 配色パレット（サブカテゴリー用） ---------- */
+const PALETTE = {
+  amber:  { bg: '#fef3c7', fg: '#b45309', bd: '#fde68a' },
+  pink:   { bg: '#fce7f3', fg: '#be185d', bd: '#fbcfe8' },
+  indigo: { bg: '#e0e7ff', fg: '#4338ca', bd: '#c7d2fe' },
+  emerald:{ bg: '#d1fae5', fg: '#047857', bd: '#a7f3d0' },
+  sky:    { bg: '#e0f2fe', fg: '#0369a1', bd: '#bae6fd' },
+  violet: { bg: '#ede9fe', fg: '#6d28d9', bd: '#ddd6fe' },
+  rose:   { bg: '#ffe4e6', fg: '#be123c', bd: '#fecdd3' },
+  teal:   { bg: '#ccfbf1', fg: '#0f766e', bd: '#99f6e4' },
+  orange: { bg: '#ffedd5', fg: '#c2410c', bd: '#fed7aa' },
+  slate:  { bg: '#f1f5f9', fg: '#475569', bd: '#e2e8f0' }
+};
+const pal = k => PALETTE[k] || PALETTE.slate;
+
+/* ---------- インラインSVGアイコン ---------- */
+const svg = (path, w) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (w || 1.7) + '" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">' + path + '</svg>';
+const ICONS = {
+  stamp:  svg('<rect x="4" y="4" width="16" height="16" rx="2.5"/><rect x="8.5" y="8.5" width="7" height="7" rx="1.5"/><path d="M4 9h2M4 15h2M18 9h2M18 15h2"/>'),
+  coin:   svg('<ellipse cx="12" cy="7.5" rx="7" ry="3"/><path d="M5 7.5v9c0 1.7 3.1 3 7 3s7-1.3 7-3v-9"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>'),
+  watch:  svg('<circle cx="12" cy="12" r="5.6"/><path d="M12 9.6V12l1.8 1.4"/><path d="M9.6 6.4L10 3h4l.4 3.4"/><path d="M9.6 17.6L10 21h4l.4-3.4"/>'),
+  bag:    svg('<path d="M5 8.5h14l-1.1 10.7a1.6 1.6 0 0 1-1.6 1.4H7.7a1.6 1.6 0 0 1-1.6-1.4Z"/><path d="M9.2 8.5V6.8a2.8 2.8 0 0 1 5.6 0v1.7"/>'),
+  sparkle:svg('<path d="M11 3.2l1.5 5.1 5.1 1.5-5.1 1.5L11 16.4 9.5 11.3 4.4 9.8l5.1-1.5z"/><path d="M17.6 15.4l.7 2.1 2.1.7-2.1.7-.7 2.1-.7-2.1-2.1-.7 2.1-.7z"/>'),
+  gem:    svg('<path d="M12 3.4L4.6 9.4 12 20.6l7.4-11.2z"/><path d="M4.6 9.4h14.8"/><path d="M9.3 9.4L12 20.6l2.7-11.2L12 3.4z"/>'),
+  camera: svg('<rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.8"/><path d="M8.6 7l1.2-2.2h4.4L15.4 7"/>'),
+  flame:  svg('<path d="M12 3.2s4 3.7 4 7.3a4 4 0 0 1-8 0c0-1.4.6-2.7 1.4-3.7"/><path d="M12 14.5V21"/><path d="M9 21h6"/>'),
+  pen:    svg('<path d="M4 20l2.4-6.2L14.9 5.3l3.8 3.8L10.2 17.6z"/><path d="M13.4 6.8l3.8 3.8"/><path d="M4 20l2.6-.5"/>'),
+  vase:   svg('<path d="M9.4 3h5.2l-.9 2.9c2.6 2 3.9 4.7 3.9 7.6 0 4-2.6 7-6 7s-6-3-6-7c0-2.9 1.3-5.6 3.9-7.6z"/><path d="M9.4 3h5.2"/>'),
+  box:    svg('<path d="M4 8.5L12 4l8 4.5v7L12 20l-8-4.5z"/><path d="M4 8.5L12 13l8-4.5"/><path d="M12 13v7"/>'),
+  clock:  svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
+  calendar:svg('<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17"/><path d="M8 3.5V6M16 3.5V6"/>'),
+  external:svg('<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>'),
+  message:svg('<path d="M4 5.5h16v11H8.5L4 20z"/>'),
+  sun:    svg('<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>'),
+  moon:   svg('<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>'),
+  briefcase:svg('<rect x="3" y="7.5" width="18" height="12" rx="2.5"/><path d="M9 7.5V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8v1.7"/><path d="M3 12.5h18"/>'),
+  chart:  svg('<path d="M4 20V4"/><path d="M4 20h16"/><rect x="7.5" y="12" width="3" height="5" rx="1"/><rect x="13" y="8" width="3" height="9" rx="1"/>'),
+  file:   svg('<path d="M13 3H7.5A1.5 1.5 0 0 0 6 4.5v15A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M13 3v5h5"/>'),
+  fuel:   svg('<path d="M4 20V5.5A1.5 1.5 0 0 1 5.5 4h6A1.5 1.5 0 0 1 13 5.5V20"/><path d="M4 20h9"/><path d="M13 9h3.5a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 0 3 0V9.5L18 7"/>'),
+  train:  svg('<rect x="5" y="3.5" width="14" height="13" rx="3"/><path d="M5 10h14"/><path d="M9 20l1.5-3.5M15 20l-1.5-3.5"/><path d="M6.5 20h11"/>'),
+  cart:   svg('<circle cx="9.5" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/><path d="M3 4h2.2l2.3 11.2h11.2L21 7H6"/>'),
+  users:  svg('<circle cx="9" cy="8.5" r="3.4"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.6a3.4 3.4 0 0 1 0 6.6"/><path d="M17.5 20a5.6 5.6 0 0 0-1.6-3.9"/>'),
+  shield: svg('<path d="M12 3l7 2.8v5.4c0 4.4-2.9 8.2-7 9.8-4.1-1.6-7-5.4-7-9.8V5.8z"/><path d="M9 12l2.2 2.2L15.5 10"/>')
+};
+
+/* ---------- 初期データ ---------- */
+const DEFAULTS = {
+  meta: {
+    org: '株式会社STR ／ ユメノバ 催事事業部',
+    orgShort: 'ユメノバ / 催事事業部',
+    priceTitle: '株式会社STR 売価設定表（社外秘・2026/08/24作成）',
+    footer: '© 株式会社STR All Rights Reserved.',
+    archiveDays: 14
+  },
+  quickRules: {
+    title: 'グループLINE・連絡徹底ルール',
+    items: ['確認したら必ずリアクションする', '回答や対応が必要な内容は必ず返信する', '業務連絡はできるだけ早く確認・対応する'],
+    notice: '新人・既存メンバー関係なく全員共通の絶対ルールです。'
+  },
+  quickCards: [
+    { id: 'q-jobcan', type: 'links', icon: 'clock', color: 'indigo', title: '勤怠管理・シフト',
+      body: '日々の打刻、交通費申請はジョブカンから行ってください。シフト表の確認もこちらから。',
+      links: [
+        { id: 'l-jobcan', label: 'ジョブカン打刻', icon: 'external', url: 'https://id.jobcan.jp/users/sign_in?app_key=atd', color: '#4f46e5' },
+        { id: 'l-shift', label: 'シフト表確認', icon: 'calendar', url: 'https://docs.google.com/spreadsheets/d/1Is25EE2oys9FKc-pmNOFyLN-jZ2EcQeWC0Qcv4GpSN8/edit?gid=228413212#gid=228413212', color: '#059669' }
+      ] }
+  ],
+  categories: [
+    { name: '全社通達', emoji: '📢', color: 'amber' },
+    { name: '査定・ルール', emoji: '💎', color: 'indigo' },
+    { name: '現場・店舗', emoji: '🏢', color: 'emerald' },
+    { name: 'その他', emoji: '📌', color: 'slate' }
+  ],
+  posts: [
+    { id: 'p-1', date: '2026-10-06', category: '全社通達',
+      title: '他社クレーム事例の共有と身だしなみ・接客ルールの徹底について',
+      content: '会場仲介業者様より他社催事のクレーム事例を共有いただきました。声掛け・高齢者対応・接客態度・査定説明・店舗会場ルールを全員で改めて確認してください。目先の1件よりも「次回もこの店舗で開催できる行動」を意識しましょう。' }
+  ],
+  price: {
+    groups: [
+      { id: 'g-kitte', name: '切手', badge: '売価率', color: 'pink', icon: 'stamp', subs: [
+        { id: 's-kitte', name: '切手', icon: 'stamp', color: 'pink', items: [
+          { id: 'i-1', label: '切手額面', value: '50%' },
+          { id: 'i-2', label: 'ハガキ額面', value: '50%' },
+          { id: 'i-3', label: '収入印紙額面', value: '50%' }
+        ] }
+      ] },
+      { id: 'g-kinken', name: '金券', badge: '金券・テレカ', color: 'amber', icon: 'stamp', subs: [
+        { id: 's-kinken', name: '金券', icon: 'stamp', color: 'amber', items: [
+          { id: 'i-4', label: '金券額面', value: '90%' },
+          { id: 'i-5', label: 'テレフォンカード', value: '50度: ¥350｜105度: ¥700', warn: '※105度以上は買取不可' }
+        ] }
+      ] },
+      { id: 'g-prekka', name: 'プレ貨', badge: '金銭・銀貨', color: 'orange', icon: 'coin', subs: [
+        { id: 's-prekka', name: 'プレ貨', icon: 'coin', color: 'orange', items: [
+          { id: 'i-6', label: '100円銀貨', value: '¥500' },
+          { id: 'i-7', label: '1,000円銀貨', value: '¥4,000' },
+          { id: 'i-9', label: '日本法定通貨/古銭/銀貨/金貨', value: '別途グループ真贋 g×100円' }
+        ] }
+      ] },
+      { id: 'g-kizoku', name: '貴金属', badge: '地金・金歯', color: 'indigo', icon: 'gem', subs: [
+        { id: 's-kizoku', name: '貴金属', icon: 'gem', color: 'indigo', items: [
+          { id: 'i-8', label: '地金型金貨 (K24)', value: '90% × g (GOLDS相場表)' },
+          { id: 'i-10', label: '金歯 / チャン金', value: 'K10計算 / G相談' },
+          { id: 'i-11', label: 'あとK', value: '相場の半分' }
+        ] }
+      ] },
+      { id: 'g-genko', name: '現行銭', badge: '額面100%', color: 'emerald', icon: 'coin', subs: [
+        { id: 's-genko', name: '現行銭', icon: 'coin', color: 'emerald', items: [
+          { id: 'i-12', label: '現行銭額面', value: '100%' }
+        ] }
+      ] },
+      { id: 'g-brand', name: 'ブランド', badge: '時計・バッグ・小物', color: 'indigo', icon: 'sparkle', subs: [
+        { id: 's-br-watch', name: '時計', icon: 'watch', color: 'indigo', items: [
+          { id: 'i-13', label: 'NB時計', value: '¥0' },
+          { id: 'i-14', label: 'SEIKO / CITIZEN / G-SHOCK', value: '¥0 (まとめ品として記載)' },
+          { id: 'i-15', label: '5,000円以上時計', value: 'メルカリ・ヤフオク売値の4割' }
+        ] },
+        { id: 's-br-bag', name: 'バッグ', icon: 'bag', color: 'violet', items: [
+          { id: 'i-16', label: 'NBバッグ', value: '¥0' }
+        ] },
+        { id: 's-br-acc', name: '小物', icon: 'sparkle', color: 'sky', items: [
+          { id: 'i-17', label: 'その他ブランドバッグ・財布・小物', value: 'GDで値踏みする' }
+        ] },
+        { id: 's-br-jewel', name: 'ブランドジュエリー', icon: 'gem', color: 'rose', items: [
+          { id: 'i-18', label: 'Nina Ricci等ブランドメッキ', value: '¥0' },
+          { id: 'i-19', label: 'スワロフスキー', value: '¥100' }
+        ] }
+      ] },
+      { id: 'g-other', name: 'その他', badge: '詳細ルール', color: 'emerald', icon: 'box', subs: [
+        { id: 's-ot-camera', name: 'カメラ（デジタル機器含む）', icon: 'camera', color: 'sky', items: [
+          { id: 'i-20', label: 'ガラケー / スマホ', value: '¥500 / ¥100' },
+          { id: 'i-21', label: 'フィルム/一眼レフ/レンズ', value: '¥100' },
+          { id: 'i-22', label: 'デジカメ', value: '¥1,000' },
+          { id: 'i-23', label: '5,000円以上カメラ', value: 'メルカリ・ヤフオク売値の4割' }
+        ] },
+        { id: 's-ot-lighter', name: 'ライター', icon: 'flame', color: 'orange', items: [
+          { id: 'i-24', label: 'ZIPPO (高額品はG相談)', value: '¥500' },
+          { id: 'i-25', label: 'Cartier / dunhill等ライター', value: '¥5,000' },
+          { id: 'i-26', label: 'S.T. Dupont', value: '¥10,000' }
+        ] },
+        { id: 's-ot-pen', name: '万年筆・ペン', icon: 'pen', color: 'violet', items: [
+          { id: 'i-27', label: '万年筆ペン先地金 0.2g計算', value: '解体❌ (地金計算)' },
+          { id: 'i-28', label: 'モンブラン・Parker・ペリカン', value: 'GDで値踏みする' },
+          { id: 'i-29', label: 'NB万年筆 / ボールペン', value: '¥0' }
+        ] },
+        { id: 's-ot-classic', name: '骨董・その他', icon: 'vase', color: 'slate', items: [
+          { id: 'i-30', label: '着物', value: '¥0' },
+          { id: 'i-31', label: '骨董品 (無銘の壺・皿など)', value: '基本 ¥0' },
+          { id: 'i-32', label: 'メッキアクセサリー', value: '¥0' },
+          { id: 'i-33', label: '古銭 / 外貨まとめ', value: '¥0' }
+        ] }
+      ] }
+    ],
+    notes: { title: '査定時の重要注意事項', items: ['GD値踏み真贋の最低売価計算を基本とすること。', '役員相談：相見積もり額が高い場合、買えない場合。'] }
+  },
+  manual: {
+    open: { title: 'オープン業務フロー', icon: 'sun', color: 'indigo', steps: [
+      { id: 'c-o1', title: '出金 (近くのATM)', body: '初日はそこまで金額を下ろさない。20万円弱くらいでOK。' },
+      { id: 'c-o2', title: 'テナント責任者へ挨拶', body: '' },
+      { id: 'c-o3', title: '展示ブースの設置', body: '' },
+      { id: 'c-o4', title: '査定ブースの設置', body: '' },
+      { id: 'c-o5', title: 'オープン完了報告', body: '展示場所・査定場所の写真をとってLINEへ' },
+      { id: 'c-o6', title: '出金内容報告', body: 'LINEへ' }
+    ] },
+    close: { title: '締め作業業務フロー ＆ 持ち帰り', icon: 'moon', color: 'emerald', steps: [
+      { id: 'c-c1', title: '展示ブースの片付け', body: '最終日までは室内査定場所に室外展示ブースのものをまとめる。最終日は車へ荷物を積む。' },
+      { id: 'c-c2', title: 'LINEでお金の報告', body: '' },
+      { id: 'c-c3', title: '内容をまとめる', body: 'メインは報告スプシへ' }
+    ] },
+    carry: { icon: 'briefcase', title: '必ず持ち帰りするもの', body: 'お金 / 高額の品物（貴金属・ブランド・時計） / 計算書（個人情報）' },
+    line:  { icon: 'chart', title: 'LINE報告内容', body: '買取金 / 全体AR / ＋AR / －AR / プラス査定名 / マイナス査定名', body2: '【カテゴリー毎の粗利】切手・金券・プレ貨・貴金属・現行銭・ブランド・その他' }
+  },
+  expense: {
+    cards: [
+      { id: 'e-1', icon: 'file', title: '出張精算申請書 ※要添付', body: '経費明細（レンタカー・ホテル・駐車場等）、交通費明細、ガソリン代（走行距離km入力）、ETC代。' },
+      { id: 'e-2', icon: 'fuel', title: '交通費精算(ガソリン・ETC)', body: 'ジョブカンから申請してください。ガソリン代は数量（走行距離km）を入力。ETC代をそれぞれ入力。' },
+      { id: 'e-3', icon: 'train', title: '交通費精算申請書', body: 'ジョブカンから申請してください。電車・バス・タクシー代など。駅名入力で自動算出されますが、違う場合やタクシーは手入力可。' },
+      { id: 'e-4', icon: 'cart', title: '経費精算申請書 ※要添付', body: '備品購入など。' }
+    ],
+    notes: { title: '申請時の注意点', items: ['交通費（電車・バス・タクシー・ガソリン・ETC）は、すべてジョブカンから申請してください。', 'ファイルに領収書の添付をお願いします（データまたは写真でOK。電車代の領収書は不要です）。', '明細数は［＋］ボタンで増やせます。申請は催事最終日（基本金曜日）にまとめて行ってください。'] }
+  },
+  tools: [
+    { id: 't-golds', title: 'GOLD・S 買取査定ツール', desc: '金・貴金属などの買取査定に使うツールです。', icon: 'gem', color: 'amber', url: 'https://sayaka-creator.github.io/-/', badge: '査定ツール' },
+    { id: 't-antique', title: 'アンティーリンク 買取相場', desc: 'アンティーク・骨董などの買取相場を確認できます。', icon: 'vase', color: 'emerald', url: 'https://sayaka-creator.github.io/---/', badge: '買取相場' },
+    { id: 't-learn', title: '商品知識学習サイト', desc: '商品知識を学べる学習サイト（作成予定）。URLが決まったら、このカードを編集して設定してください。', icon: 'file', color: 'indigo', url: '', badge: '準備中' }
+  ],
+  toolNotes: { title: 'リンク集の使い方', items: ['「商品知識学習サイト」は今後作成予定です。URLが決まったら管理者モードでこのカードを編集し、URLを入力してください。', '管理者モードで「リンクを追加」から外部サイトを自由に追加・編集・削除できます。', 'URLが未設定のリンクは「準備中」と表示され、ボタンは押せません。'] }
+};
+
+/* ---------- 状態 ---------- */
+const KEY = 'str_portal_data_v2';
+const ARCHIVE_DAYS = 14; // 既定の自動分類期間（管理者が変更可能）
+const archDays = () => Math.max(1, Number(D.meta && D.meta.archiveDays) || ARCHIVE_DAYS);
+const ARCH_KEY = 'str_portal_archive_open_v1';
+let archOpen = {};
+let archDefaultOpen = true;
+try { archOpen = JSON.parse(localStorage.getItem(ARCH_KEY) || '{}') || {}; } catch (e) { archOpen = {}; }
+function saveArchOpen() { try { localStorage.setItem(ARCH_KEY, JSON.stringify(archOpen)); } catch (e) {} }
+function setAllArch(open) { archDefaultOpen = open; archOpen = {}; saveArchOpen(); renderNews(); lucide.createIcons(); }
+document.addEventListener('toggle', e => {
+  const d = e.target;
+  if (d && d.tagName === 'DETAILS' && d.dataset && d.dataset.arch) { archOpen[d.dataset.arch] = d.open; saveArchOpen(); }
+}, true);
+let undoStack = [];
+let prevState = null;
+let D = loadData();
+prevState = JSON.stringify(D);
+let admin = false;
+let newsView = 'recent';
+let activeGroup = 'all';
+let subClosed = {};
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return clone(DEFAULTS);
+    return migrate(JSON.parse(raw));
+  } catch (e) { return clone(DEFAULTS); }
+}
+function migrate(saved) {
+  const out = Object.assign(clone(DEFAULTS), saved || {});
+  ['quickCards', 'posts', 'categories'].forEach(k => { if (!Array.isArray(out[k])) out[k] = clone(DEFAULTS[k]); });
+  ['meta', 'quickRules', 'price', 'manual', 'expense'].forEach(k => { if (!out[k] || typeof out[k] !== 'object') out[k] = clone(DEFAULTS[k]); });
+  if (!Array.isArray(out.tools)) out.tools = clone(DEFAULTS.tools);
+  if (!out.toolNotes) out.toolNotes = clone(DEFAULTS.toolNotes);
+  if (!Array.isArray(out.price.groups)) out.price.groups = clone(DEFAULTS.price.groups);
+  if (!out.price.notes) out.price.notes = clone(DEFAULTS.price.notes);
+  if (!out.meta.archiveDays) out.meta.archiveDays = DEFAULTS.meta.archiveDays || 14;
+  upgradePriceStructure(out);
+  return out;
+}
+/* 旧バージョンの「切手・金券類」「プレ貨・貴金属・現行銭」というまとめ大カテゴリーを、
+   切手／金券／プレ貨／貴金属／現行銭 の独立した大カテゴリーに自動変換する（既存データを保持） */
+function upgradePriceStructure(out) {
+  const legacy = ['g-kitte', 'g-kikai'];
+  const olds = out.price.groups.filter(g => legacy.indexOf(g.id) >= 0);
+  if (!olds.length) return; // すでに新構造
+  const pool = {};
+  olds.forEach(g => (g.subs || []).forEach(s => (s.items || []).forEach(it => { pool[it.id] = it; })));
+  const keep = out.price.groups.filter(g => legacy.indexOf(g.id) < 0);
+  const fresh = clone(DEFAULTS.price.groups).filter(g => ['g-kitte', 'g-kinken', 'g-prekka', 'g-kizoku', 'g-genko'].indexOf(g.id) >= 0);
+  fresh.forEach(g => g.subs.forEach(s => {
+    s.items = s.items.map(it => pool[it.id] || it);
+    s.items.forEach(it => { if (pool[it.id]) delete pool[it.id]; });
+  }));
+  const leftover = Object.keys(pool).map(k => pool[k]);
+  if (leftover.length) fresh[0].subs[0].items = fresh[0].subs[0].items.concat(leftover);
+  out.price.groups = fresh.concat(keep);
+}
+function save() {
+  if (prevState !== null) { undoStack.push(prevState); if (undoStack.length > 30) undoStack.shift(); }
+  try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) { showToast('保存できませんでした（容量不足）'); }
+  prevState = JSON.stringify(D);
+  updateUndoBtn();
+}
+
+/* ---------- 変更の取り消し（アンドゥ） ---------- */
+function updateUndoBtn() {
+  const b = $('#undoBtn'); if (!b) return;
+  const has = undoStack.length > 0;
+  b.disabled = !has;
+  const t = $('#undoCount'); if (t) t.textContent = has ? '(' + undoStack.length + ')' : '';
+}
+function undoLast() {
+  if (!undoStack.length) { showToast('元に戻せる変更がありません'); return; }
+  const prev = undoStack.pop();
+  try { D = migrate(JSON.parse(prev)); } catch (e) { showToast('元に戻せませんでした'); return; }
+  prevState = JSON.stringify(D);
+  try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {}
+  renderAll(); lucide.createIcons(); updateUndoBtn();
+  showToast('直前の変更を取り消しました（残り' + undoStack.length + '件）');
+}
+
+/* ---------- トースト ---------- */
+let toastTimer = null;
+function showToast(msg) {
+  const t = $('#toast');
+  $('#toastText').textContent = msg;
+  t.classList.remove('opacity-0', 'translate-y-4'); t.classList.add('opacity-100', 'translate-y-0');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.classList.add('opacity-0', 'translate-y-4'); t.classList.remove('opacity-100', 'translate-y-0'); }, 2600);
+}
+
+/* ---------- 管理者モード ---------- */
+function toggleAdminMode() {
+  admin = !admin;
+  $('#adminPanel').classList.toggle('hidden', !admin);
+  $('#adminBar').classList.toggle('hidden', !admin);
+  $('#adminBtnText').textContent = admin ? '社員モードに戻る' : '管理者モード切替';
+  document.body.classList.toggle('admin-on', admin);
+  renderAll();
+  showToast(admin ? '管理者モードに入りました' : '社員モードに戻りました');
+}
+
+/* ---------- ナビ ---------- */
+const NAV = [
+  { id: 'quick', label: '勤怠・連絡', icon: 'zap' },
+  { id: 'news', label: '新着情報', icon: 'bell' },
+  { id: 'price', label: '売価設定表', icon: 'table' },
+  { id: 'links', label: 'リンク集', icon: 'link' },
+  { id: 'manual', label: '開店・閉店', icon: 'list-checks' },
+  { id: 'expense', label: '経費申請', icon: 'receipt' }
+];
+function renderNav() {
+  $('#sectionNav').innerHTML = NAV.map(n =>
+    '<li><a href="#' + n.id + '" data-nav="' + n.id + '" class="nav-link inline-flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2 rounded-full bg-slate-100 text-slate-600 hover:bg-amber-100 hover:text-amber-800 transition"><i data-lucide="' + n.icon + '" class="w-3.5 h-3.5"></i>' + n.label + '</a></li>'
+  ).join('');
+}
+
+/* ---------- 管理者用ボタン ---------- */
+function adminBtns(act, id, extra) {
+  if (!admin) return '';
+  return '<span class="inline-flex items-center gap-1 shrink-0">'
+    + '<button type="button" data-act="' + act + '" data-id="' + esc(id) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : '')
+    + ' class="grid h-8 w-8 place-items-center rounded-lg bg-white/80 border border-slate-300 text-slate-600 hover:bg-white hover:text-amber-700 transition" title="編集"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>'
+    + '<button type="button" data-act="del-' + act + '" data-id="' + esc(id) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : '')
+    + ' class="grid h-8 w-8 place-items-center rounded-lg bg-white/80 border border-rose-200 text-rose-600 hover:bg-rose-50 transition" title="削除"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>'
+    + '</span>';
+}
+function adminBtnsDark(act, id, extra) {
+  if (!admin) return '';
+  return '<span class="inline-flex items-center gap-1 shrink-0">'
+    + '<button type="button" data-act="' + act + '" data-id="' + esc(id) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : '')
+    + ' class="grid h-8 w-8 place-items-center rounded-lg bg-slate-800 border border-slate-600 text-slate-300 hover:text-amber-400 transition" title="編集"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>'
+    + '<button type="button" data-act="del-' + act + '" data-id="' + esc(id) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : '')
+    + ' class="grid h-8 w-8 place-items-center rounded-lg bg-slate-800 border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition" title="削除"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>'
+    + '</span>';
+}
+function addBtn(label, act, id, extra) {
+  if (!admin) return '';
+  return '<button type="button" data-act="' + act + '"' + (id ? ' data-id="' + esc(id) + '"' : '') + (extra ? ' data-extra="' + esc(extra) + '"' : '')
+    + ' class="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-white border border-dashed border-slate-400 text-slate-600 hover:border-amber-500 hover:text-amber-700 text-xs font-bold transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i>' + label + '</button>';
+}
+
+/* ---------- 勤怠・連絡 ---------- */
+function renderQuick() {
+  $('#quickCards').innerHTML = D.quickCards.map(c => {
+    if (c.type === 'rules') {
+      const p = pal('amber');
+      return '<div class="bg-amber-50 p-5 sm:p-6 rounded-2xl shadow-sm border border-amber-200 flex flex-col justify-between gap-4">'
+        + '<div class="space-y-3">'
+        + '<div class="flex items-start justify-between gap-2">'
+        + '<div class="flex items-center gap-2 font-bold text-base" style="color:#78350f"><i data-lucide="message-square" class="w-5 h-5"></i><h3>' + esc(c.title) + '</h3></div>'
+        + adminBtns('edit-quick', c.id) + '</div>'
+        + '<ul class="text-sm text-amber-900 space-y-2.5 font-medium">' + c.items.map(i => '<li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 mt-0.5 shrink-0 text-amber-600"></i><span>' + esc(i) + '</span></li>').join('') + '</ul>'
+        + '</div>'
+        + '<div class="flex items-start gap-2 text-sm text-amber-900 bg-amber-100 border border-amber-300 p-3.5 rounded-xl font-bold leading-relaxed"><span class="shrink-0">⚠️</span><span>' + esc(c.notice || '') + '</span></div>'
+        + '</div>';
+    }
+    const p = pal(c.color);
+    return '<div class="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between gap-5">'
+      + '<div class="space-y-3">'
+      + '<div class="flex items-start justify-between gap-2">'
+      + '<div class="flex items-center gap-2 font-bold text-base" style="color:' + p.fg + '">' + (ICONS[c.icon] ? '<span class="w-5 h-5">' + ICONS[c.icon] + '</span>' : '<i data-lucide="clock" class="w-5 h-5"></i>') + '<h3>' + esc(c.title) + '</h3></div>'
+      + adminBtns('edit-quick', c.id) + '</div>'
+      + '<p class="text-sm text-slate-600 leading-relaxed">' + esc(c.body || '') + '</p>'
+      + '</div>'
+      + '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-4 border-t border-slate-100">'
+      + (c.links || []).map(l => '<a href="' + esc(l.url) + '" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 h-12 px-4 text-white rounded-xl text-sm font-bold transition shadow-sm hover:opacity-90" style="background:' + esc(l.color || '#4f46e5') + '">' + (ICONS[l.icon] ? '<span class="w-4 h-4">' + ICONS[l.icon] + '</span>' : '<i data-lucide="external-link" class="w-4 h-4"></i>') + '<span>' + esc(l.label) + '</span></a>').join('')
+      + '</div></div>';
+  }).join('');
+
+  $('#quickRules').innerHTML = admin
+    ? '<div class="mt-4 flex justify-end">' + addBtn('カードを追加', 'add-quick') + '</div>' : '';
+}
+
+/* ---------- カテゴリー選択肢 ---------- */
+function categoryOptions() {
+  return D.categories.map(c => '<option value="' + esc(c.name) + '">' + (c.emoji ? c.emoji + ' ' : '') + esc(c.name) + '</option>').join('');
+}
+function catOf(name) {
+  return D.categories.find(c => c.name === name) || { name: name, emoji: '📌', color: 'slate' };
+}
+
+/* ---------- 新着情報 ---------- */
+function sortedPosts() {
+  return D.posts.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+}
+function postCard(p) {
+  const c = catOf(p.category);
+  const col = pal(c.color);
+  const imgs = (p.images && p.images.length)
+    ? '<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-3">' + p.images.map(src =>
+        '<img src="' + esc(src) + '" alt="投稿画像" loading="lazy" class="rounded-xl border border-slate-200 object-cover h-32 w-full shadow-sm cursor-pointer hover:opacity-90 transition" onclick="window.open(this.src)">').join('') + '</div>'
+    : '';
+  return '<article class="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 fade-in" data-post="' + esc(p.id) + '">'
+    + '<div class="flex items-center justify-between gap-3">'
+    + '<span class="font-bold px-2.5 py-1 rounded-md text-xs" style="background:' + col.bg + ';color:' + col.fg + '">' + (c.emoji ? c.emoji + ' ' : '') + esc(p.category) + '</span>'
+    + '<div class="flex items-center gap-2"><span class="text-slate-500 text-xs font-semibold tabular-nums">' + esc(fmtJP(p.date)) + '</span>' + adminBtns('edit-post', p.id) + '</div>'
+    + '</div>'
+    + '<h3 class="font-bold text-slate-900 text-base leading-snug">' + esc(p.title) + '</h3>'
+    + '<p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">' + esc(p.content) + '</p>'
+    + imgs + '</article>';
+}
+function renderNews() {
+  const q = ($('#postSearch').value || '').trim().toLowerCase();
+  const cat = $('#postFilter').value || '';
+  const match = p => (!cat || p.category === cat) && (!q || (p.title + ' ' + p.content + ' ' + p.category).toLowerCase().includes(q));
+
+  const recent = [], archived = {};
+  sortedPosts().forEach(p => {
+    if (daysSince(p.date) >= archDays()) { (archived[p.category] = archived[p.category] || []).push(p); }
+    else recent.push(p);
+  });
+  const recentShown = recent.filter(match);
+  const archTotal = Object.values(archived).reduce((n, a) => n + a.length, 0);
+  const archShown = Object.values(archived).reduce((n, a) => n + a.filter(match).length, 0);
+
+  $$('.newsTab').forEach(b => {
+    const v = b.dataset.view;
+    const on = v === newsView;
+    b.textContent = (v === 'recent' ? '🆕 新着（2週間以内）' : '🗂 カテゴリー別アーカイブ') + '　' + (v === 'recent' ? recentShown.length : archShown) + '件';
+    b.style.background = on ? '#0f172a' : '#f8fafc';
+    b.style.color = on ? '#fbbf24' : '#475569';
+    b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
+  });
+
+  const container = $('#postsContainer');
+  const arch = $('#archiveContainer');
+
+  if (newsView === 'recent') {
+    container.innerHTML = recentShown.length
+      ? recentShown.map(postCard).join('')
+      : '<p class="text-center text-sm text-slate-500 py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">2週間以内の新着投稿はありません。</p>';
+    arch.innerHTML = '<p class="text-xs text-slate-500 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 leading-relaxed">'
+      + '🕒 ' + archDays() + '日を過ぎた投稿は自動でカテゴリー別アーカイブに分類されます（現在 ' + archTotal + '件）。上の「カテゴリー別アーカイブ」タブで確認できます。</p>';
+    $('#postCount').textContent = recentShown.length + ' 件';
+  } else {
+    container.innerHTML = '';
+    // カテゴリー別アーカイブ：登録カテゴリー＋未分類を件数付きで一覧表示し、
+    // さらに月別に整理して自動分類する（発信から N 日を過ぎた投稿が対象）
+    const filtering = !!(q || cat);
+    const catList = D.categories.slice();
+    Object.keys(archived).forEach(name => { if (!catList.some(c => c.name === name)) catList.push({ name: name, emoji: '❓', color: 'slate' }); });
+    const totalArch = Object.values(archived).reduce((n, a) => n + a.length, 0);
+    const shownCats = filtering ? catList.filter(c => (archived[c.name] || []).filter(match).length) : catList;
+
+    const daysSel = admin
+      ? '<label class="flex items-center gap-1.5 text-[11px] font-bold text-slate-300">自動分類：発信から'
+        + '<select id="archDaysSel" class="h-8 px-2 rounded-lg bg-slate-800 border border-slate-600 text-amber-400 text-[11px] font-bold">'
+        + [7, 14, 30, 60, 90].map(d => '<option value="' + d + '"' + (d === archDays() ? ' selected' : '') + '>' + d + '日</option>').join('')
+        + '</select>を過ぎたら</label>'
+      : '';
+
+    const summary = '<div class="flex flex-wrap items-center gap-x-3 gap-y-2 bg-slate-900 text-white rounded-2xl px-4 py-3.5">'
+      + '<span class="font-bold text-sm flex items-center gap-2"><i data-lucide="archive" class="w-4 h-4 text-amber-400"></i>カテゴリー別アーカイブ</span>'
+      + '<span class="text-[11px] text-slate-300">発信から ' + archDays() + '日を過ぎた投稿を、カテゴリーごとに自動で分類・整理しています</span>'
+      + '<span class="ml-auto flex flex-wrap items-center gap-2">'
+      + daysSel
+      + '<button type="button" data-act="arch-expand" class="h-8 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] font-bold text-slate-200 transition">すべて展開</button>'
+      + '<button type="button" data-act="arch-collapse" class="h-8 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] font-bold text-slate-200 transition">すべて折りたたむ</button>'
+      + '<span class="text-xs font-black text-amber-400 bg-slate-800 px-2.5 py-1 rounded-lg tabular-nums">合計 ' + totalArch + ' 件</span>'
+      + '</span></div>';
+
+    const groups = shownCats.map(c => {
+      const all = archived[c.name] || [];
+      const list = all.filter(match);
+      const col = pal(c.color);
+      const open = archOpen[c.name] !== undefined ? archOpen[c.name] : archDefaultOpen;
+      const dates = all.map(p => String(p.date || '')).filter(Boolean).sort();
+      const range = dates.length ? (fmtJP(dates[0]) + (dates.length > 1 ? ' 〜 ' + fmtJP(dates[dates.length - 1]) : '')) : '';
+      const byMonth = {};
+      list.forEach(p => { const m = String(p.date || '').slice(0, 7) || '----'; (byMonth[m] = byMonth[m] || []).push(p); });
+      const months = Object.keys(byMonth).sort().reverse();
+      const body = months.map(m => {
+        const parts = m.split('-');
+        const label = parts.length === 2 ? (parts[0] + '年' + Number(parts[1]) + '月') : '日付未設定';
+        return '<div class="space-y-3">'
+          + '<div class="flex items-center gap-2.5"><span class="text-[11px] font-black text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md tabular-nums">' + label + '</span>'
+          + '<span class="flex-1 h-px bg-slate-200"></span>'
+          + '<span class="text-[11px] font-bold text-slate-400 tabular-nums">' + byMonth[m].length + ' 件</span></div>'
+          + byMonth[m].map(postCard).join('')
+          + '</div>';
+      }).join('');
+      return '<details ' + (open ? 'open ' : '') + 'data-arch="' + esc(c.name) + '" class="bg-white rounded-2xl border border-slate-200 overflow-hidden">'
+        + '<summary class="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3.5 cursor-pointer" style="background:' + col.bg + '">'
+        + '<span class="flex items-center gap-2.5 font-bold text-sm" style="color:' + col.fg + '"><span class="text-base">' + (c.emoji || '📌') + '</span>' + esc(c.name) + '</span>'
+        + '<span class="flex items-center gap-2">'
+        + (range ? '<span class="hidden sm:inline text-[11px] font-bold tabular-nums" style="color:' + col.fg + ';opacity:.75">' + range + '</span>' : '')
+        + '<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-white/80 tabular-nums" style="color:' + col.fg + '">' + list.length + ' 件</span>'
+        + '<i data-lucide="chevron-down" class="w-4 h-4" style="color:' + col.fg + '"></i></span>'
+        + '</summary>'
+        + '<div class="p-4 space-y-3.5">' + (list.length ? body : '<p class="text-xs text-slate-500 py-1.5">このカテゴリーのアーカイブはまだありません。</p>') + '</div></details>';
+    }).join('');
+    arch.innerHTML = summary + (groups || '<p class="text-center text-sm text-slate-500 py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">条件に一致するアーカイブはありません。</p>');
+    $('#postCount').textContent = archShown + ' 件';
+  }
+
+  const total = newsView === 'recent' ? recentShown.length : archShown;
+  $('#postsEmpty').classList.toggle('hidden', total > 0);
+  if (total === 0) $('#postsEmpty').classList.add('hidden'); // 各コンテナ内の空表示を使う
+  $('#postFilter').innerHTML = '<option value="">すべてのカテゴリー</option>' + categoryOptions();
+  $('#postFilter').value = cat;
+  $('#postCategory').innerHTML = categoryOptions();
+}
+
+/* ---------- 売価設定表 ---------- */
+function renderPrice() {
+  const groups = D.price.groups;
+  $('#priceTabs').innerHTML = '<button type="button" data-tab="all" class="priceTab h-10 px-4 rounded-xl text-xs font-bold border transition"></button>'
+    + groups.map(g => {
+        const col = pal(g.color);
+        return '<button type="button" data-tab="' + esc(g.id) + '" class="priceTab h-10 px-4 rounded-xl text-xs font-bold border transition inline-flex items-center gap-1.5"></button>';
+      }).join('');
+
+  const tabs = $$('.priceTab');
+  tabs.forEach(b => {
+    const id = b.dataset.tab;
+    const g = groups.find(x => x.id === id);
+    const on = activeGroup === id;
+    b.textContent = g ? g.name : 'すべて';
+    if (g) {
+      const col = pal(g.color);
+      b.style.background = on ? col.fg : col.bg;
+      b.style.color = on ? '#fff' : col.fg;
+      b.style.borderColor = on ? col.fg : col.bd;
+    } else {
+      b.style.background = on ? '#0f172a' : '#f8fafc';
+      b.style.color = on ? '#fbbf24' : '#475569';
+      b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
+    }
+  });
+
+  const list = activeGroup === 'all' ? groups : groups.filter(g => g.id === activeGroup);
+  $('#pricePanels').innerHTML = list.map(g => {
+    const col = pal(g.color);
+    const subCards = g.subs.map(s => {
+      const sc = pal(s.color);
+      const closed = subClosed[s.id] === true;
+      return '<div class="price-sub bg-white rounded-2xl border border-slate-200 overflow-hidden" data-sub="' + esc(s.id) + '">'
+        + '<div class="flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-slate-50 transition">'
+        + '<button type="button" onclick="toggleSub(\'' + esc(s.id) + '\')" class="flex items-center gap-2.5 min-w-0 flex-1 text-left">'
+        + '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style="background:' + sc.bg + ';color:' + sc.fg + '">' + (ICONS[s.icon] || ICONS.box) + '</span>'
+        + '<span class="min-w-0"><span class="block font-bold text-sm truncate" style="color:' + sc.fg + '">' + esc(s.name) + '</span>'
+        + '<span class="block text-[11px] text-slate-400 font-bold tabular-nums">' + s.items.length + ' 品目</span></span>'
+        + '</button>'
+        + '<span class="flex items-center gap-2 shrink-0">' + adminBtns('edit-sub', s.id, g.id)
+        + '<button type="button" onclick="toggleSub(\'' + esc(s.id) + '\')" class="grid h-8 w-8 place-items-center rounded-lg hover:bg-slate-100 transition" aria-label="開閉"><svg viewBox="0 0 24 24" fill="none" stroke="' + sc.fg + '" stroke-width="2" stroke-linecap="round" class="sub-chev w-4 h-4 transition-transform" style="' + (closed ? 'transform:rotate(-90deg)' : '') + '"><path d="M6 9l6 6 6-6"/></svg></button>'
+        + '</span>'
+        + '</div>'
+        + '<ul class="px-4 pb-4 space-y-0.5' + (closed ? ' hidden' : '') + '">'
+        + s.items.map(it => '<li class="price-item py-2.5 border-b border-dashed border-slate-200 last:border-0">'
+            + '<div class="flex items-start justify-between gap-3">'
+            + '<div class="min-w-0 flex-1">'
+            + '<span class="text-slate-700 leading-relaxed wrap-any">' + esc(it.label) + '</span>'
+            + (it.warn ? '<span class="block text-[11px] text-rose-600 font-bold wrap-any mt-0.5">' + esc(it.warn) + '</span>' : '')
+            + '</div>'
+            + '<div class="flex items-start gap-2 shrink-0">'
+            + '<strong class="text-slate-900 tabular-nums text-[15px] text-right max-w-[10rem] wrap-any">' + esc(it.value) + '</strong>'
+            + adminBtns('edit-item', it.id, s.id)
+            + '</div>'
+            + '</div></li>').join('')
+        + '</ul>'
+        + (admin ? '<div class="px-4 pb-4">' + addBtn('品目を追加', 'add-item', s.id, g.id) + '</div>' : '')
+        + '</div>';
+    }).join('');
+
+    return '<div class="price-card bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden" data-group="' + esc(g.id) + '">'
+      + '<div class="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b" style="background:' + col.bg + ';border-color:' + col.bd + '">'
+      + '<div class="flex items-center gap-2.5 min-w-0">'
+      + '<span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl" style="background:#fff;color:' + col.fg + ';border:1px solid ' + col.bd + '">' + (ICONS[g.icon] || ICONS.box) + '</span>'
+      + '<h3 class="font-bold text-base truncate" style="color:' + col.fg + '">' + esc(g.name) + '</h3></div>'
+      + '<div class="flex items-center gap-2">' + (g.badge ? '<span class="text-[11px] font-bold px-2.5 py-1 rounded-md bg-white/80" style="color:' + col.fg + '">' + esc(g.badge) + '</span>' : '') + adminBtns('edit-group', g.id) + '</div>'
+      + '</div>'
+      + '<div class="p-4 sm:p-5 grid gap-3.5 md:grid-cols-2">' + subCards + '</div>'
+      + (admin ? '<div class="px-4 sm:px-5 pb-4">' + addBtn('小カテゴリーを追加', 'add-sub', g.id) + '</div>' : '')
+      + '</div>';
+  }).join('');
+
+  const notes = D.price.notes;
+  $('#priceNotes').innerHTML = '<div class="bg-amber-50 p-4 sm:p-5 rounded-2xl border border-amber-200 text-sm text-amber-900">'
+    + '<div class="flex items-start justify-between gap-3"><strong class="text-amber-950 flex items-center gap-2 text-base"><i data-lucide="alert-circle" class="w-5 h-5 text-amber-600"></i><span>' + esc(notes.title) + '</span></strong>' + adminBtns('edit-price-notes', 'notes') + '</div>'
+    + '<ul class="mt-3 space-y-2 leading-relaxed">' + notes.items.map(i => '<li class="flex items-start gap-2"><span class="shrink-0">✅</span><span>' + esc(i) + '</span></li>').join('') + '</ul></div>';
+
+  $('#priceToolLinks').innerHTML = (D.tools || []).filter(t => t.url).map(t =>
+    '<a href="' + esc(t.url) + '" target="_blank" rel="noopener noreferrer" class="h-9 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 text-[11px] font-bold transition inline-flex items-center gap-1.5"><span class="w-3.5 h-3.5">' + (ICONS[t.icon] || ICONS.external) + '</span>' + esc(t.title) + '</a>').join('');
+  filterPrices();
+}
+function toggleSub(id) {
+  subClosed[id] = subClosed[id] !== true;
+  const card = document.querySelector('[data-sub="' + id + '"]');
+  if (!card) return;
+  card.querySelector('ul').classList.toggle('hidden', subClosed[id] === true);
+  const ch = card.querySelector('.sub-chev');
+  if (ch) ch.style.transform = subClosed[id] === true ? 'rotate(-90deg)' : '';
+}
+function filterPrices() {
+  const q = ($('#priceSearch').value || '').trim().toLowerCase();
+  const searching = q.length > 0;
+  let total = 0;
+  $$('#pricePanels > .price-card').forEach(card => {
+    let groupVisible = 0;
+    card.querySelectorAll('.price-sub').forEach(sub => {
+      let vis = 0;
+      sub.querySelectorAll('.price-item').forEach(item => {
+        const ok = !searching || item.textContent.toLowerCase().includes(q);
+        item.classList.toggle('hidden', !ok);
+        if (ok) vis++;
+      });
+      // 検索していないときは、品目がまだ0件の小カテゴリーも必ず表示する
+      // （追加直後の小カテゴリーが消えて「反映されない」ように見えるのを防ぐ）
+      const hideSub = searching && vis === 0;
+      sub.classList.toggle('hidden', hideSub);
+      if (!hideSub && vis > 0) {
+        sub.querySelector('ul').classList.remove('hidden');
+        const chev = sub.querySelector('.sub-chev');
+        if (chev) chev.style.transform = '';
+      }
+      groupVisible += vis;
+    });
+    card.classList.toggle('hidden', searching && groupVisible === 0);
+    total += groupVisible;
+  });
+  $('#priceCount').textContent = total;
+  $('#priceEmpty').classList.toggle('hidden', total > 0);
+}
+
+/* ---------- 開店・閉店 ---------- */
+function stepList(kind, block) {
+  const col = pal(block.color);
+  const done = block.steps.filter(s => checks[s.id]).length;
+  return '<div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4">'
+    + '<div class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3">'
+    + '<div class="flex items-center gap-2 font-black text-base" style="color:' + col.fg + '">' + (ICONS[block.icon] || ICONS.sun) + '<span class="w-5 h-5 hidden"></span><span>' + esc(block.title) + '</span></div>'
+    + '<span class="text-xs font-bold px-2.5 py-1 rounded-full tabular-nums" style="background:' + col.bg + ';color:' + col.fg + '" id="' + kind + 'Progress">' + done + ' / ' + block.steps.length + '</span>'
+    + '</div>'
+    + '<ul class="space-y-2.5">' + block.steps.map((s, i) =>
+        '<li><div class="flex items-start gap-3 bg-white p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 transition">'
+        + '<input type="checkbox" data-check="' + esc(s.id) + '" onchange="updateProgress()" ' + (checks[s.id] ? 'checked' : '') + ' class="mt-0.5 w-5 h-5 shrink-0 rounded border-slate-300 cursor-pointer">'
+        + '<span class="flex items-start gap-2.5 leading-relaxed flex-1 min-w-0">'
+        + '<span class="text-white font-bold w-5 h-5 rounded-full grid place-items-center shrink-0 text-[11px]" style="background:' + col.fg + '">' + (i + 1) + '</span>'
+        + '<span class="min-w-0"><strong class="text-slate-900">' + esc(s.title) + '</strong>' + (s.body ? '<span class="text-slate-600">' + (/^[（(]|^LINE|^メイン|^展示|^初日|^最終/.test(s.body) ? '：' : ' ') + esc(s.body) + '</span>' : '') + '</span></span>'
+        + (admin ? '<span class="shrink-0">' + adminBtns('edit-step', s.id, kind) + '</span>' : '')
+        + '</div></li>').join('') + '</ul>'
+    + (admin ? '<div class="pt-1">' + addBtn('業務を追加', 'add-step', kind) + '</div>' : '')
+    + '</div>';
+}
+function renderManual() {
+  $('#openCard').innerHTML = stepList('open', D.manual.open);
+  $('#closeCard').innerHTML = stepList('close', D.manual.close);
+  const carry = D.manual.carry, line = D.manual.line;
+  $('#carryArea').innerHTML =
+    '<div class="bg-emerald-50 p-4 sm:p-5 rounded-2xl border border-emerald-200 space-y-2 text-sm text-emerald-900">'
+    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span class="w-5 h-5">' + ICONS.briefcase + '</span><span>' + esc(carry.title) + '</span></div>' + adminBtns('edit-carry', 'carry') + '</div>'
+    + '<p class="leading-relaxed">' + esc(carry.body) + '</p></div>'
+    + '<div class="bg-indigo-50 p-4 sm:p-5 rounded-2xl border border-indigo-200 space-y-2 text-sm text-indigo-900">'
+    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span class="w-5 h-5">' + ICONS.chart + '</span><span>' + esc(line.title) + '</span></div>' + adminBtns('edit-line', 'line') + '</div>'
+    + '<p class="leading-relaxed">' + esc(line.body) + '</p>'
+    + (line.body2 ? '<p class="leading-relaxed font-semibold">' + esc(line.body2) + '</p>' : '')
+    + '</div>';
+  updateProgress();
+}
+
+/* ---------- 経費申請 ---------- */
+function renderExpense() {
+  $('#expenseCards').innerHTML = D.expense.cards.map(c =>
+    '<div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">'
+    + '<div class="flex items-start justify-between gap-2"><div class="font-bold text-slate-900 flex items-center gap-2 text-sm">'
+    + '<span class="w-4 h-4 text-slate-400">' + (ICONS[c.icon] || ICONS.file) + '</span><span>' + esc(c.title) + '</span></div>' + adminBtns('edit-exp', c.id) + '</div>'
+    + '<p class="text-sm text-slate-600 leading-relaxed">' + esc(c.body) + '</p></div>').join('')
+    + (admin ? '<div class="sm:col-span-2 lg:col-span-4">' + addBtn('項目を追加', 'add-exp') + '</div>' : '');
+  const n = D.expense.notes;
+  $('#expenseNotes').innerHTML = '<div class="bg-blue-50 p-4 sm:p-5 rounded-2xl border border-blue-200 text-sm text-blue-900 space-y-2.5">'
+    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span>📝</span><span>' + esc(n.title) + '</span></div>' + adminBtns('edit-exp-notes', 'notes') + '</div>'
+    + '<ul class="space-y-2 leading-relaxed">' + n.items.map(i => '<li class="flex items-start gap-2"><span class="shrink-0">・</span><span>' + esc(i) + '</span></li>').join('') + '</ul></div>';
+}
+
+/* ---------- 外部ツール・リンク集 ---------- */
+function renderTools() {
+  const cards = D.tools || [];
+  $('#toolCards').innerHTML = cards.map(c => {
+    const col = pal(c.color);
+    const has = !!(c.url && c.url.trim());
+    const btn = has
+      ? '<a href="' + esc(c.url) + '" target="_blank" rel="noopener noreferrer" class="mt-1 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-white text-sm font-bold transition shadow-sm hover:opacity-90" style="background:' + col.fg + '"><span class="w-4 h-4">' + (ICONS[c.icon] || ICONS.external) + '</span><span>サイトを開く</span></a>'
+      : '<span class="mt-1 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-slate-100 text-slate-400 text-sm font-bold border border-dashed border-slate-300">準備中（URL未設定）</span>';
+    return '<div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 flex flex-col gap-3">'
+      + '<div class="flex items-start justify-between gap-2">'
+      + '<div class="flex items-center gap-2.5 min-w-0">'
+      + '<span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl" style="background:' + col.bg + ';color:' + col.fg + '">' + (ICONS[c.icon] || ICONS.external) + '</span>'
+      + '<div class="min-w-0"><p class="font-bold text-slate-900 text-sm truncate">' + esc(c.title) + '</p>'
+      + (c.badge ? '<span class="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded" style="background:' + col.bg + ';color:' + col.fg + '">' + esc(c.badge) + '</span>' : '')
+      + '</div></div>' + adminBtns('edit-tool', c.id) + '</div>'
+      + '<p class="text-sm text-slate-600 leading-relaxed flex-1">' + esc(c.desc || '') + '</p>'
+      + (has ? '<p class="text-[11px] text-slate-400 break-all font-semibold">' + esc(c.url) + '</p>' : '')
+      + btn
+      + '</div>';
+  }).join('') + (admin ? '<div class="sm:col-span-2 lg:col-span-3">' + addBtn('リンクを追加', 'add-tool') + '</div>' : '');
+  const n = D.toolNotes;
+  if (n) $('#toolNotes').innerHTML = '<div class="bg-sky-50 p-4 sm:p-5 rounded-2xl border border-sky-200 text-sm text-sky-900 space-y-2.5">'
+    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span>💡</span><span>' + esc(n.title) + '</span></div>' + adminBtns('edit-tool-notes', 'notes') + '</div>'
+    + '<ul class="space-y-2 leading-relaxed">' + n.items.map(i => '<li class="flex items-start gap-2"><span class="shrink-0">・</span><span>' + esc(i) + '</span></li>').join('') + '</ul></div>';
+  else $('#toolNotes').innerHTML = '';
+}
+function openToolEditor(id) {
+  const c = id ? (D.tools || []).find(x => x.id === id) : null;
+  openEditor({
+    title: c ? 'リンクを編集' : 'リンクを追加', desc: '外部ツール・サイトへのリンクカードです。',
+    fields: [
+      { name: 'title', label: '名称', value: c ? c.title : '', required: true, placeholder: '例：GOLD・S 買取査定ツール' },
+      { name: 'desc', label: '説明', type: 'textarea', rows: 2, value: c ? (c.desc || '') : '', placeholder: '例：金・貴金属の買取査定に使うツール' },
+      { name: 'url', label: 'URL', value: c ? (c.url || '') : '', placeholder: 'https://…（未定なら空欄でOK）' },
+      { name: 'badge', label: 'バッジ表記（任意）', value: c ? (c.badge || '') : '', placeholder: '例：査定ツール / 準備中' },
+      iconSelect(c ? c.icon : 'external'), colorSelect(c ? c.color : 'sky')
+    ],
+    onSubmit: fd => {
+      const rec = { id: c ? c.id : uid('t-'), title: fd.get('title').trim(), desc: fd.get('desc').trim(), url: fd.get('url').trim(), badge: fd.get('badge').trim(), icon: fd.get('icon'), color: fd.get('color') };
+      if (c) Object.assign(c, rec); else D.tools.push(rec);
+      save(); closeEditor(); renderTools(); renderPrice(); lucide.createIcons(); showToast(c ? '更新しました' : '追加しました');
+    }
+  });
+}
+
+/* ---------- カテゴリー管理（管理者バー） ---------- */
+function renderCategoryManager() {
+  const box = $('#categoryManager');
+  if (!admin) { box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="flex items-center justify-between gap-3 border-b border-slate-700 pb-3">'
+    + '<div class="flex items-center gap-2 text-amber-400 font-black text-sm"><i data-lucide="tags" class="w-4 h-4"></i><span>発信カテゴリーの管理</span></div>'
+    + '<button type="button" data-act="cat-add" class="h-9 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-black transition inline-flex items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i>カテゴリー追加</button></div>'
+    + '<div class="space-y-2">' + D.categories.map((c, i) => {
+        const col = pal(c.color);
+        return '<div class="flex flex-wrap items-center gap-2 bg-slate-900/60 rounded-xl p-2.5">'
+          + '<input data-cat="emoji" data-i="' + i + '" value="' + esc(c.emoji || '') + '" class="w-12 h-10 text-center text-lg bg-slate-800 border border-slate-700 rounded-lg text-white" maxlength="4">'
+          + '<input data-cat="name" data-i="' + i + '" value="' + esc(c.name) + '" class="flex-1 min-w-[8rem] h-10 px-3 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm font-bold">'
+          + '<select data-cat="color" data-i="' + i + '" class="h-10 px-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs">'
+          + Object.keys(PALETTE).map(k => '<option value="' + k + '"' + (k === c.color ? ' selected' : '') + '>' + k + '</option>').join('') + '</select>'
+          + '<span class="text-xs font-bold px-2.5 py-1 rounded-md" style="background:' + col.bg + ';color:' + col.fg + '">' + esc(c.name) + '</span>'
+          + '<button type="button" data-act="cat-save" data-id="' + i + '" class="h-10 px-3 rounded-lg bg-white text-slate-900 text-xs font-black hover:bg-slate-100 transition">保存</button>'
+          + '<button type="button" data-act="cat-del" data-id="' + i + '" class="h-10 px-3 rounded-lg bg-slate-800 border border-rose-500/40 text-rose-400 text-xs font-bold hover:bg-rose-500/10 transition">削除</button>'
+          + '</div>';
+      }).join('') + '</div>'
+    + '<p class="text-[11px] text-slate-400 leading-relaxed">※カテゴリー名を変更すると、既存の投稿・絞り込み・アーカイブも新しい名前に自動で付け替わります。</p>';
+}
+
+/* ---------- 全体描画 ---------- */
+function renderAll() {
+  $('#headerOrg').textContent = D.meta.orgShort;
+  $('#heroOrg').textContent = D.meta.org;
+  $('#footerMeta').innerHTML = esc(D.meta.footer);
+  $('#priceTitle').textContent = D.meta.priceTitle;
+  $$('.admin-only').forEach(el => { el.classList.toggle('hidden', !admin); el.classList.toggle('inline-flex', admin); });
+  renderCategoryManager();
+  renderQuick();
+  renderNews();
+  renderPrice();
+  renderTools();
+  renderManual();
+  renderExpense();
+  updateUndoBtn();
+  lucide.createIcons();
+  handleScroll();
+}
+
+/* ---------- チェックリスト ---------- */
+const CHECK_KEY = 'str_portal_checklist_v2';
+let checks = {};
+try { checks = JSON.parse(localStorage.getItem(CHECK_KEY) || '{}'); } catch (e) { checks = {}; }
+function saveChecks() { try { localStorage.setItem(CHECK_KEY, JSON.stringify(checks)); } catch (e) {} }
+function updateProgress() {
+  $$('input[type="checkbox"][data-check]').forEach(cb => {
+    if (cb.checked !== !!checks[cb.dataset.check]) { cb.checked = !!checks[cb.dataset.check]; }
+  });
+  const cnt = (block) => block.steps.filter(s => checks[s.id]).length;
+  const o = $('#openProgress'), c = $('#closeProgress');
+  if (o) o.textContent = cnt(D.manual.open) + ' / ' + D.manual.open.steps.length;
+  if (c) c.textContent = cnt(D.manual.close) + ' / ' + D.manual.close.steps.length;
+}
+function resetChecks() {
+  D.manual.open.steps.concat(D.manual.close.steps).forEach(s => { checks[s.id] = false; });
+  saveChecks(); updateProgress(); showToast('チェックをすべてリセットしました');
+}
+
+/* ---------- スクロール ---------- */
+function highlightNav() {
+  const pos = window.scrollY + 220;
+  let cur = NAV[0].id;
+  NAV.forEach(n => { const el = document.getElementById(n.id); if (el && el.offsetTop <= pos) cur = n.id; });
+  $$('.nav-link').forEach(l => {
+    const on = l.dataset.nav === cur;
+    l.classList.toggle('bg-amber-500', on); l.classList.toggle('text-white', on);
+    l.classList.toggle('bg-slate-100', !on); l.classList.toggle('text-slate-600', !on);
+  });
+}
+function handleScroll() {
+  const t = $('#toTop');
+  const show = window.scrollY > 600;
+  t.classList.toggle('opacity-0', !show); t.classList.toggle('translate-y-4', !show); t.classList.toggle('pointer-events-none', !show);
+  t.classList.toggle('opacity-100', show); t.classList.toggle('translate-y-0', show);
+  highlightNav();
+}
+
+/* ---------- モーダルエディタ ---------- */
+let editorSubmit = null;
+function fieldHtml(f) {
+  const label = '<label class="block font-bold text-slate-700 text-sm mb-1.5">' + esc(f.label) + (f.required ? ' <span class="text-rose-500">*</span>' : '') + '</label>';
+  const cls = 'w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-3 text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30';
+  let input = '';
+  if (f.type === 'textarea') input = '<textarea name="' + f.name + '" rows="' + (f.rows || 4) + '" ' + (f.required ? 'required' : '') + ' class="' + cls + ' leading-relaxed" placeholder="' + esc(f.placeholder || '') + '">' + esc(f.value || '') + '</textarea>';
+  else if (f.type === 'select') input = '<select name="' + f.name + '" class="' + cls + '">' + (f.options || []).map(o => '<option value="' + esc(o.value) + '"' + (String(o.value) === String(f.value) ? ' selected' : '') + '>' + esc(o.label) + '</option>').join('') + '</select>';
+  else input = '<input type="' + (f.type || 'text') + '" name="' + f.name + '" value="' + esc(f.value || '') + '" ' + (f.required ? 'required' : '') + ' class="' + cls + '" placeholder="' + esc(f.placeholder || '') + '">';
+  return '<div>' + label + input + (f.hint ? '<p class="text-xs text-slate-500 mt-1.5 leading-relaxed">' + esc(f.hint) + '</p>' : '') + '</div>';
+}
+function openEditor(cfg) {
+  $('#modalTitle').textContent = cfg.title;
+  $('#modalDesc').textContent = cfg.desc || '';
+  $('#modalForm').innerHTML = cfg.fields.map(fieldHtml).join('');
+  editorSubmit = cfg.onSubmit;
+  $('#modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  const first = $('#modalForm').querySelector('input,textarea,select');
+  if (first) setTimeout(() => first.focus(), 30);
+}
+function closeEditor() {
+  $('#modal').classList.add('hidden');
+  document.body.style.overflow = '';
+  editorSubmit = null;
+}
+$('#modalForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  if (editorSubmit) editorSubmit(fd);
+});
+
+/* ---------- エディタ呼び出し（種類別） ---------- */
+const catSelect = (val) => ({ type: 'select', name: 'category', label: 'カテゴリー', value: val || (D.categories[0] || {}).name, options: D.categories.map(c => ({ value: c.name, label: (c.emoji ? c.emoji + ' ' : '') + c.name })) });
+const colorSelect = (val) => ({ type: 'select', name: 'color', label: '色', value: val || 'amber', options: Object.keys(PALETTE).map(k => ({ value: k, label: k })) });
+const iconSelect = (val) => ({ type: 'select', name: 'icon', label: 'アイコン', value: val || 'box', options: Object.keys(ICONS).map(k => ({ value: k, label: k })) });
+
+function findPost(id) { return D.posts.find(p => p.id === id); }
+function findGroup(id) { return D.price.groups.find(g => g.id === id); }
+function findSub(subId) { for (const g of D.price.groups) { const s = g.subs.find(x => x.id === subId); if (s) return { g: g, s: s }; } return null; }
+function findStep(kind, id) { return D.manual[kind].steps.find(s => s.id === id); }
+
+function openPostEditor(id) {
+  const p = id ? findPost(id) : null;
+  openEditor({
+    title: p ? '投稿を編集' : '新しい投稿', desc: p ? '内容を変更して保存します。' : '新着情報として掲載されます。',
+    fields: [
+      { name: 'title', label: 'タイトル', value: p ? p.title : '', required: true, placeholder: '例：【重要】今週の催事注意事項について' },
+      { name: 'date', label: '発信日', type: 'date', value: p ? p.date : todayISO(), required: true, hint: 'この日から' + archDays() + '日を過ぎると自動でカテゴリー別アーカイブに移動します。' },
+      catSelect(p ? p.category : ''),
+      { name: 'content', label: '内容・本文', type: 'textarea', rows: 6, value: p ? p.content : '', required: true }
+    ],
+    onSubmit: fd => {
+      const rec = { id: p ? p.id : uid('p-'), title: fd.get('title').trim(), date: fd.get('date'), category: fd.get('category'), content: fd.get('content').trim(), images: p ? (p.images || []) : [] };
+      if (p) Object.assign(p, rec); else D.posts.push(rec);
+      save(); closeEditor(); renderNews(); lucide.createIcons(); showToast(p ? '投稿を更新しました' : '投稿しました');
+    }
+  });
+}
+function openQuickEditor(id) {
+  const c = D.quickCards.find(x => x.id === id);
+  if (c && c.type === 'rules') {
+    openEditor({
+      title: '連絡ルールを編集', desc: '1行につき1つのルールとして表示されます。',
+      fields: [
+        { name: 'title', label: '見出し', value: c.title, required: true },
+        { name: 'items', label: 'ルール（改行区切り）', type: 'textarea', rows: 5, value: c.items.join('\n'), required: true },
+        { name: 'notice', label: '注意書き', type: 'textarea', rows: 2, value: c.notice }
+      ],
+      onSubmit: fd => {
+        c.title = fd.get('title').trim();
+        c.items = fd.get('items').split('\n').map(s => s.trim()).filter(Boolean);
+        c.notice = fd.get('notice').trim();
+        save(); closeEditor(); renderQuick(); lucide.createIcons(); showToast('更新しました');
+      }
+    });
+    return;
+  }
+  const isNew = !c;
+  const card = c || { title: '', body: '', icon: 'clock', color: 'indigo', type: 'links', links: [] };
+  openEditor({
+    title: isNew ? 'カードを追加' : 'カードを編集', desc: '勤怠・連絡セクションに表示されるカードです。',
+    fields: [
+      { name: 'title', label: '見出し', value: card.title, required: true },
+      { name: 'body', label: '説明文', type: 'textarea', rows: 3, value: card.body || '' },
+      iconSelect(card.icon), colorSelect(card.color),
+      { name: 'links', label: 'ボタン（1行に「ラベル|URL」）', type: 'textarea', rows: 3, value: (card.links || []).map(l => l.label + '|' + l.url).join('\n'), hint: '例：ジョブカン打刻|https://id.jobcan.jp/...' }
+    ],
+    onSubmit: fd => {
+      const links = fd.get('links').split('\n').map(s => s.trim()).filter(Boolean).map((line, i) => {
+        const parts = line.split('|');
+        return { id: 'l-' + i + '-' + Math.random().toString(36).slice(2, 6), label: (parts[0] || '').trim(), url: (parts[1] || '#').trim(), icon: i === 0 ? 'external' : 'calendar', color: i === 0 ? '#4f46e5' : '#059669' };
+      });
+      const rec = { id: isNew ? uid('q-') : card.id, type: 'links', title: fd.get('title').trim(), body: fd.get('body').trim(), icon: fd.get('icon'), color: fd.get('color'), links: links };
+      if (isNew) D.quickCards.push(rec); else Object.assign(card, rec);
+      save(); closeEditor(); renderQuick(); lucide.createIcons(); showToast(isNew ? 'カードを追加しました' : '更新しました');
+    }
+  });
+}
+function openGroupEditor(id) {
+  const g = id ? findGroup(id) : null;
+  openEditor({
+    title: g ? '大カテゴリーを編集' : '大カテゴリーを追加',
+    fields: [
+      { name: 'name', label: '名称', value: g ? g.name : '', required: true },
+      { name: 'badge', label: 'バッジ表記（任意）', value: g ? g.badge : '' },
+      iconSelect(g ? g.icon : 'box'), colorSelect(g ? g.color : 'emerald')
+    ],
+    onSubmit: fd => {
+      const rec = { id: g ? g.id : uid('g-'), name: fd.get('name').trim(), badge: fd.get('badge').trim(), icon: fd.get('icon'), color: fd.get('color'), subs: g ? g.subs : [] };
+      if (g) Object.assign(g, rec); else D.price.groups.push(rec);
+      save(); closeEditor(); renderPrice(); lucide.createIcons(); showToast(g ? '更新しました' : '追加しました');
+    }
+  });
+}
+function openSubEditor(subId, groupId) {
+  const found = subId ? findSub(subId) : null;
+  const g = found ? found.g : findGroup(groupId);
+  if (!g) return;
+  openEditor({
+    title: found ? '小カテゴリーを編集' : '小カテゴリーを追加', desc: '大カテゴリー「' + g.name + '」の中に表示されます。',
+    fields: [
+      { name: 'name', label: '名称', value: found ? found.s.name : '', required: true, placeholder: '例：時計 / バッグ / カメラ' },
+      iconSelect(found ? found.s.icon : 'box'), colorSelect(found ? found.s.color : g.color)
+    ],
+    onSubmit: fd => {
+      const rec = { id: found ? found.s.id : uid('s-'), name: fd.get('name').trim(), icon: fd.get('icon'), color: fd.get('color'), items: found ? found.s.items : [] };
+      if (found) Object.assign(found.s, rec); else g.subs.push(rec);
+      save(); closeEditor(); renderPrice(); lucide.createIcons(); showToast(found ? '更新しました' : '追加しました');
+    }
+  });
+}
+function openItemEditor(itemId, subId) {
+  const found = findSub(subId);
+  if (!found) return;
+  const it = itemId ? found.s.items.find(x => x.id === itemId) : null;
+  const moveOptions = D.price.groups.flatMap(g => g.subs.map(s => ({ value: s.id, label: g.name + ' ／ ' + s.name })));
+  openEditor({
+    title: it ? '品目を編集' : '品目を追加',
+    fields: [
+      { name: 'label', label: '品目名', value: it ? it.label : '', required: true },
+      { name: 'value', label: '買取価格・条件', value: it ? it.value : '', required: true, placeholder: '例：¥500 / 50% / メルカリ・ヤフオク売値の4割' },
+      { name: 'warn', label: '注記（任意）', value: it ? (it.warn || '') : '', placeholder: '例：※105度以上は買取不可' },
+      { type: 'select', name: 'sub', label: '所属する小カテゴリー', value: subId, options: moveOptions }
+    ],
+    onSubmit: fd => {
+      const target = findSub(fd.get('sub'));
+      if (!target) return;
+      const rec = { id: it ? it.id : uid('i-'), label: fd.get('label').trim(), value: fd.get('value').trim(), warn: fd.get('warn').trim() };
+      if (it) {
+        Object.assign(it, rec);
+        if (target.s.id !== found.s.id) { found.s.items = found.s.items.filter(x => x.id !== it.id); target.s.items.push(it); }
+      } else target.s.items.push(rec);
+      save(); closeEditor(); renderPrice(); lucide.createIcons(); showToast(it ? '更新しました' : '追加しました');
+    }
+  });
+}
+function openStepEditor(kind, id) {
+  const block = D.manual[kind];
+  const st = id ? findStep(kind, id) : null;
+  openEditor({
+    title: st ? '業務を編集' : '業務を追加', desc: '「' + block.title + '」のチェックリストに追加されます。',
+    fields: [
+      { name: 'title', label: '業務名', value: st ? st.title : '', required: true },
+      { name: 'body', label: '補足（任意）', type: 'textarea', rows: 3, value: st ? st.body : '' }
+    ],
+    onSubmit: fd => {
+      const rec = { id: st ? st.id : uid('c-'), title: fd.get('title').trim(), body: fd.get('body').trim() };
+      if (st) Object.assign(st, rec); else block.steps.push(rec);
+      save(); closeEditor(); renderManual(); lucide.createIcons(); showToast(st ? '更新しました' : '追加しました');
+    }
+  });
+}
+function openExpenseEditor(id) {
+  const c = id ? D.expense.cards.find(x => x.id === id) : null;
+  openEditor({
+    title: c ? '項目を編集' : '項目を追加',
+    fields: [
+      { name: 'title', label: '見出し', value: c ? c.title : '', required: true },
+      { name: 'body', label: '説明', type: 'textarea', rows: 3, value: c ? c.body : '' },
+      iconSelect(c ? c.icon : 'file')
+    ],
+    onSubmit: fd => {
+      const rec = { id: c ? c.id : uid('e-'), title: fd.get('title').trim(), body: fd.get('body').trim(), icon: fd.get('icon') };
+      if (c) Object.assign(c, rec); else D.expense.cards.push(rec);
+      save(); closeEditor(); renderExpense(); lucide.createIcons(); showToast(c ? '更新しました' : '追加しました');
+    }
+  });
+}
+function openNotesEditor(which) {
+  const map = { price: D.price.notes, expense: D.expense.notes, tool: D.toolNotes };
+  const n = map[which];
+  openEditor({
+    title: '注意事項を編集', desc: '1行につき1項目として表示されます。',
+    fields: [
+      { name: 'title', label: '見出し', value: n.title, required: true },
+      { name: 'items', label: '項目（改行区切り）', type: 'textarea', rows: 5, value: n.items.join('\n'), required: true }
+    ],
+    onSubmit: fd => {
+      n.title = fd.get('title').trim();
+      n.items = fd.get('items').split('\n').map(s => s.trim()).filter(Boolean);
+      save(); closeEditor(); if (which === 'price') renderPrice(); else if (which === 'tool') renderTools(); else renderExpense(); lucide.createIcons(); showToast('更新しました');
+    }
+  });
+}
+function openBlockEditor(which) {
+  const b = which === 'carry' ? D.manual.carry : D.manual.line;
+  openEditor({
+    title: '内容を編集',
+    fields: [
+      { name: 'title', label: '見出し', value: b.title, required: true },
+      { name: 'body', label: '本文', type: 'textarea', rows: 3, value: b.body },
+      ...(which === 'line' ? [{ name: 'body2', label: '本文2（任意）', type: 'textarea', rows: 2, value: b.body2 || '' }] : [])
+    ],
+    onSubmit: fd => {
+      b.title = fd.get('title').trim(); b.body = fd.get('body').trim();
+      if (which === 'line') b.body2 = fd.get('body2').trim();
+      save(); closeEditor(); renderManual(); lucide.createIcons(); showToast('更新しました');
+    }
+  });
+}
+
+/* ---------- カテゴリー管理操作 ---------- */
+function addCategory() {
+  const i = D.categories.length;
+  D.categories.push({ name: '新カテゴリー' + (i + 1), emoji: '📌', color: 'slate' });
+  save(); renderCategoryManager(); renderNews(); lucide.createIcons();
+  showToast('カテゴリーを追加しました。名前を入力して保存してください');
+}
+function saveCategory(i) {
+  const nameEl = document.querySelector('[data-cat="name"][data-i="' + i + '"]');
+  const emojiEl = document.querySelector('[data-cat="emoji"][data-i="' + i + '"]');
+  const colorEl = document.querySelector('[data-cat="color"][data-i="' + i + '"]');
+  const c = D.categories[i]; if (!c || !nameEl) return;
+  const newName = nameEl.value.trim(); if (!newName) { showToast('名前を入力してください'); return; }
+  const old = c.name;
+  c.name = newName; c.emoji = emojiEl.value.trim(); c.color = colorEl.value;
+  if (old !== newName) D.posts.forEach(p => { if (p.category === old) p.category = newName; });
+  save(); renderAll(); showToast('カテゴリーを保存しました');
+}
+function delCategory(i) {
+  const c = D.categories[i]; if (!c) return;
+  const used = D.posts.filter(p => p.category === c.name).length;
+  if (used) { showToast('「' + c.name + '」は' + used + '件の投稿で使用中のため削除できません'); return; }
+  if (!confirm('カテゴリー「' + c.name + '」を削除しますか？')) return;
+  D.categories.splice(i, 1); save(); renderAll(); showToast('削除しました');
+}
+
+/* ---------- 汎用削除 ---------- */
+function removeAt(kind, id, extra) {
+  const names = {
+    'quick': 'このカード', 'post': 'この投稿', 'group': 'この大カテゴリー', 'sub': 'この小カテゴリー',
+    'item': 'この品目', 'step': 'この業務', 'exp': 'この項目', 'tool': 'このリンク'
+  };
+  if (!confirm((names[kind] || 'この項目') + 'を削除しますか？')) return;
+  if (kind === 'quick') D.quickCards = D.quickCards.filter(x => x.id !== id);
+  if (kind === 'post') D.posts = D.posts.filter(x => x.id !== id);
+  if (kind === 'group') D.price.groups = D.price.groups.filter(x => x.id !== id);
+  if (kind === 'sub') { const f = findSub(id); if (f) f.g.subs = f.g.subs.filter(x => x.id !== id); }
+  if (kind === 'item') { const f = findSub(extra); if (f) f.s.items = f.s.items.filter(x => x.id !== id); }
+  if (kind === 'step') { D.manual[extra].steps = D.manual[extra].steps.filter(x => x.id !== id); delete checks[id]; saveChecks(); }
+  if (kind === 'exp') D.expense.cards = D.expense.cards.filter(x => x.id !== id);
+  if (kind === 'tool') D.tools = (D.tools || []).filter(x => x.id !== id);
+  save(); renderAll(); showToast('削除しました');
+}
+
+/* ---------- クリック委譲 ---------- */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id, extra = el.dataset.extra;
+  const map = {
+    'add-quick': () => openQuickEditor(null), 'edit-quick': () => openQuickEditor(id), 'del-quick': () => removeAt('quick', id),
+    'edit-post': () => openPostEditor(id), 'del-post': () => removeAt('post', id),
+    'add-group': () => openGroupEditor(null), 'edit-group': () => openGroupEditor(id), 'del-group': () => removeAt('group', id),
+    'add-sub': () => openSubEditor(null, id), 'edit-sub': () => openSubEditor(id, extra), 'del-sub': () => removeAt('sub', id),
+    'add-item': () => openItemEditor(null, id), 'edit-item': () => openItemEditor(id, extra), 'del-item': () => removeAt('item', id, extra),
+    'add-step': () => openStepEditor(id, null), 'edit-step': () => openStepEditor(extra, id), 'del-step': () => removeAt('step', id, extra),
+    'add-exp': () => openExpenseEditor(null), 'edit-exp': () => openExpenseEditor(id), 'del-exp': () => removeAt('exp', id),
+    'edit-price-notes': () => openNotesEditor('price'), 'edit-exp-notes': () => openNotesEditor('expense'),
+    'edit-carry': () => openBlockEditor('carry'), 'edit-line': () => openBlockEditor('line'),
+    'cat-add': addCategory, 'cat-save': () => saveCategory(Number(id)), 'cat-del': () => delCategory(Number(id)),
+    'arch-expand': () => setAllArch(true), 'arch-collapse': () => setAllArch(false),
+    'add-tool': () => openToolEditor(null), 'edit-tool': () => openToolEditor(id), 'del-tool': () => removeAt('tool', id),
+    'edit-tool-notes': () => openNotesEditor('tool')
+  };
+  if (map[act]) { e.preventDefault(); map[act](); }
+});
+
+/* ---------- データ入出力 ---------- */
+function exportData() {
+  const blob = new Blob([JSON.stringify(D, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'str-portal-data-' + todayISO() + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  showToast('JSONを書き出しました');
+}
+function resetData() {
+  if (!confirm('保存した内容をすべて消して初期データに戻します。よろしいですか？')) return;
+  localStorage.removeItem(KEY); D = clone(DEFAULTS); save(); renderAll(); showToast('初期データに戻しました');
+}
+$('#importFile').addEventListener('change', function () {
+  const f = this.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try { D = migrate(JSON.parse(ev.target.result)); save(); renderAll(); showToast('データを読み込みました'); }
+    catch (err) { showToast('読み込みに失敗しました（JSON形式を確認してください）'); }
+  };
+  r.readAsText(f); this.value = '';
+});
+
+/* ---------- 投稿フォーム（管理者パネル） ---------- */
+document.getElementById('postImages').addEventListener('change', function () {
+  const pv = $('#imagePreview'); pv.innerHTML = '';
+  Array.from(this.files).forEach(f => {
+    const u = URL.createObjectURL(f);
+    const img = document.createElement('img');
+    img.src = u; img.alt = f.name;
+    img.className = 'h-16 w-16 object-cover rounded-lg border border-slate-600 shadow-sm';
+    pv.appendChild(img);
+  });
+});
+$('#postContent').addEventListener('input', function () { $('#contentCount').textContent = this.value.length + ' 文字'; });
+$('#postDate').value = todayISO();
+$('#postForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const title = $('#postTitle').value.trim(), category = $('#postCategory').value, content = $('#postContent').value.trim(), date = $('#postDate').value || todayISO();
+  if (!title || !content) { showToast('タイトルと本文を入力してください'); return; }
+  const files = $('#postImages').files;
+  const readers = [];
+  for (let i = 0; i < files.length; i++) {
+    readers.push(new Promise(res => { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.readAsDataURL(files[i]); }));
+  }
+  Promise.all(readers).then(images => {
+    D.posts.push({ id: uid('p-'), title: title, category: category, content: content, date: date, images: images });
+    save();
+    this.reset(); $('#imagePreview').innerHTML = ''; $('#contentCount').textContent = '0 文字'; $('#postDate').value = todayISO();
+    renderNews(); lucide.createIcons();
+    showToast('新しい情報を発信・投稿しました！');
+  });
+});
+
+/* ---------- 検索・タブ ---------- */
+$('#postSearch').addEventListener('input', renderNews);
+$('#postFilter').addEventListener('change', renderNews);
+$$('.newsTab').forEach(b => b.addEventListener('click', () => { newsView = b.dataset.view; renderNews(); }));
+$('#priceSearch').addEventListener('input', filterPrices);
+document.addEventListener('click', e => {
+  const t = e.target.closest('.priceTab');
+  if (!t) return;
+  activeGroup = t.dataset.tab;
+  renderPrice(); lucide.createIcons();
+});
+window.addEventListener('scroll', handleScroll, { passive: true });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEditor(); });
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeEditor(); });
+document.addEventListener('change', e => {
+  if (e.target && e.target.id === 'archDaysSel') {
+    D.meta.archiveDays = Number(e.target.value) || 14;
+    save(); renderNews(); lucide.createIcons();
+    showToast('アーカイブの自動分類を「発信から' + archDays() + '日」に変更しました');
+  }
+});
+
+/* ---------- 初期化 ---------- */
+$('#todayDate').textContent = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+renderNav();
+renderAll();
+lucide.createIcons();
+
+    </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
