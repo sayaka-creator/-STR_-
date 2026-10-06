@@ -84,6 +84,7 @@
                     <i data-lucide="rotate-ccw" class="w-4 h-4"></i><span>初期データに戻す</span>
                 </button>
             </div>
+            <div id="syncPanel"></div>
             <div id="categoryManager" class="bg-slate-800/60 rounded-2xl p-4 space-y-3"></div>
         </section>
 
@@ -102,6 +103,7 @@
                     <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-400 font-semibold">
                         <span class="inline-flex items-center gap-1.5"><i data-lucide="calendar-days" class="w-4 h-4 text-amber-400"></i>本日：<span id="todayDate" class="text-white">-</span></span>
                         <span class="inline-flex items-center gap-1.5"><i data-lucide="users" class="w-4 h-4 text-amber-400"></i>全メンバー共通ルールあり</span>
+                        <span class="inline-flex items-center gap-1.5"><i data-lucide="refresh-cw" class="w-4 h-4 text-amber-400"></i>最終更新：<span id="lastSyncInfo" class="text-white">-</span></span>
                     </div>
                 </div>
                 <div class="bg-white/95 rounded-2xl p-3 shadow-inner">
@@ -654,11 +656,173 @@ let newsView = 'recent';
 let activeGroup = 'all';
 let subClosed = {};
 
+/* ---------- クラウド同期（全端末でデータ共有） ----------
+   SYNC_READ_URL に公開データのURLを入れておくと、社員はページを開くだけで
+   最新データを自動で読み込みます。管理者は「クラウドへ保存」で全端末に配信できます。 */
+const SYNC_KEY = 'str_portal_sync_v1';
+const SYNC_READ_URL = './str-portal-data.json';
+let syncCfg = { readUrl: SYNC_READ_URL, owner: '', repo: '', branch: 'main', path: 'str-portal-data.json', token: '', autoSave: true, lastSync: '' };
+try { syncCfg = Object.assign(syncCfg, JSON.parse(localStorage.getItem(SYNC_KEY) || '{}')); } catch (e) {}
+function saveSyncCfg() { try { localStorage.setItem(SYNC_KEY, JSON.stringify(syncCfg)); } catch (e) {} }
+let autoSaveTimer = null;
+
+function b64encUtf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  bytes.forEach(b => { bin += String.fromCharCode(b); });
+  return btoa(bin);
+}
+function b64decUtf8(b64) {
+  const bin = atob(String(b64).replace(/\s/g, ''));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+function ghHeaders(cfg) {
+  return { 'Authorization': 'Bearer ' + cfg.token, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+}
+async function fetchShared(url) {
+  const u = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now();
+  const r = await fetch(u, { cache: 'no-store' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return await r.json();
+}
+async function ghSave(cfg, jsonStr) {
+  const api = 'https://api.github.com/repos/' + encodeURIComponent(cfg.owner) + '/' + encodeURIComponent(cfg.repo) + '/contents/' + cfg.path.split('/').map(encodeURIComponent).join('/');
+  const headers = ghHeaders(cfg);
+  let sha = null;
+  const g = await fetch(api + '?ref=' + encodeURIComponent(cfg.branch), { headers: headers, cache: 'no-store' });
+  if (g.ok) { sha = (await g.json()).sha; }
+  else if (g.status !== 404) { throw new Error('取得失敗 HTTP ' + g.status); }
+  const body = { message: 'portal data update ' + new Date().toISOString(), content: b64encUtf8(jsonStr), branch: cfg.branch };
+  if (sha) body.sha = sha;
+  const p = await fetch(api, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers), body: JSON.stringify(body) });
+  if (!p.ok) { const t = await p.text(); throw new Error('保存失敗 HTTP ' + p.status + ' ' + t.slice(0, 160)); }
+  return await p.json();
+}
+function setSyncStatus(t) { const e = $('#syncStatus'); if (e) e.textContent = t; }
+async function pullShared(silent) {
+  const url = (syncCfg.readUrl || SYNC_READ_URL || '').trim();
+  if (!url) { if (!silent) showToast('読み込みURLが未設定です'); return false; }
+  try {
+    setSyncStatus('読み込み中…');
+    const j = await fetchShared(url);
+    D = migrate(j);
+    prevState = JSON.stringify(D);
+    undoStack = [];
+    try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {}
+    syncCfg.lastSync = new Date().toISOString(); saveSyncCfg();
+    renderAll(); lucide.createIcons();
+    setSyncStatus('読込完了 ' + new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }));
+    if (!silent) showToast('クラウドから読み込みました（全端末の最新データ）');
+    return true;
+  } catch (e) {
+    setSyncStatus('読込失敗: ' + e.message);
+    if (!silent) showToast('クラウド読み込みに失敗: ' + e.message);
+    return false;
+  }
+}
+async function pushShared(silent) {
+  if (!syncCfg.owner || !syncCfg.repo || !syncCfg.token) {
+    if (!silent) { showToast('クラウド同期が未設定です。下の欄を入力して「設定を保存」してください'); const d = $('#syncPanel details'); if (d) d.open = true; }
+    return false;
+  }
+  try {
+    setSyncStatus('保存中…');
+    await ghSave(syncCfg, JSON.stringify(D));
+    syncCfg.lastSync = new Date().toISOString(); saveSyncCfg();
+    setSyncStatus('保存完了 ' + new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }));
+    const li = $('#lastSyncInfo'); if (li) li.textContent = fmtLastSync();
+    if (!silent) showToast('クラウドに保存しました。全端末への反映まで約1分です');
+    return true;
+  } catch (e) {
+    setSyncStatus('保存失敗: ' + e.message);
+    showToast('クラウド保存に失敗: ' + e.message);
+    return false;
+  }
+}
+function scheduleAutoSave() {
+  if (!syncCfg.autoSave || !syncCfg.token || !syncCfg.owner || !syncCfg.repo) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => { pushShared(true); }, 4000);
+}
+function saveSyncSettings() {
+  const g = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  const c = document.getElementById('syncAuto');
+  syncCfg.readUrl = g('syncReadUrl') || SYNC_READ_URL;
+  syncCfg.owner = g('syncOwner');
+  syncCfg.repo = g('syncRepo');
+  syncCfg.branch = g('syncBranch') || 'main';
+  syncCfg.path = g('syncPath') || 'str-portal-data.json';
+  syncCfg.token = g('syncToken');
+  syncCfg.autoSave = c ? !!c.checked : true;
+  saveSyncCfg();
+  showToast('同期設定を保存しました');
+}
+async function testSync() {
+  saveSyncSettings();
+  setSyncStatus('テスト中…');
+  try {
+    if (!syncCfg.owner || !syncCfg.repo || !syncCfg.token) throw new Error('オーナー／リポジトリ／トークンを入力してください');
+    const r = await fetch('https://api.github.com/repos/' + encodeURIComponent(syncCfg.owner) + '/' + encodeURIComponent(syncCfg.repo), { headers: ghHeaders(syncCfg), cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status + '（トークン権限を確認）');
+    const j = await r.json();
+    const w = j.permissions && j.permissions.push ? '書き込み可' : '書き込み権限なし';
+    setSyncStatus('接続OK：' + j.full_name + '（' + w + '）');
+    showToast('GitHub接続に成功しました（' + w + '）');
+  } catch (e) {
+    setSyncStatus('接続失敗: ' + e.message);
+    showToast('接続テスト失敗: ' + e.message);
+  }
+}
+function fmtLastSync() {
+  return syncCfg.lastSync
+    ? new Date(syncCfg.lastSync).toLocaleString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : '未同期';
+}
+function renderSyncPanel() {
+  const box = $('#syncPanel'); if (!box) return;
+  if (!admin) { box.innerHTML = ''; delete box.dataset.rendered; return; }
+  if (box.dataset.rendered) return;
+  box.dataset.rendered = '1';
+  const F = 'w-full bg-slate-900 border border-slate-700 rounded-lg px-3 h-10 text-white text-xs focus:outline-none focus:border-amber-500';
+  const L = 'block font-bold text-slate-300 mb-1';
+  box.innerHTML =
+    '<details class="bg-slate-800/60 rounded-2xl border border-slate-700 overflow-hidden">'
+    + '<summary class="flex flex-wrap items-center justify-between gap-2 px-4 py-3.5">'
+    + '<span class="font-black text-sm text-sky-300 flex items-center gap-2"><i data-lucide="cloud" class="w-4 h-4"></i>クラウド同期（全端末でデータ共有）</span>'
+    + '<span id="syncStatus" class="text-[11px] font-bold text-slate-300 bg-slate-900/70 px-2.5 py-1 rounded-lg">最終同期 ' + esc(fmtLastSync()) + '</span>'
+    + '</summary>'
+    + '<div class="px-4 pb-4 space-y-3.5 text-xs">'
+    + '<p class="text-slate-300 leading-relaxed">ここを設定すると、<strong class="text-amber-300">管理者が保存した内容を全端末（社員のスマホ・PC）で共有</strong>できます。設定内容はこの端末のブラウザにのみ保存され、サイトのソースには含まれません。</p>'
+    + '<div><label class="' + L + '">公開データの読み込み先URL（社員はページを開くだけで自動読み込み）</label><input id="syncReadUrl" class="' + F + '" value="' + esc(syncCfg.readUrl || SYNC_READ_URL) + '" placeholder="./str-portal-data.json"></div>'
+    + '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">'
+    + '<div><label class="' + L + '">GitHub オーナー名</label><input id="syncOwner" class="' + F + '" value="' + esc(syncCfg.owner) + '" placeholder="sayaka-creator"></div>'
+    + '<div><label class="' + L + '">リポジトリ名</label><input id="syncRepo" class="' + F + '" value="' + esc(syncCfg.repo) + '" placeholder="-STR_-"></div>'
+    + '<div><label class="' + L + '">ブランチ</label><input id="syncBranch" class="' + F + '" value="' + esc(syncCfg.branch || 'main') + '" placeholder="main"></div>'
+    + '<div><label class="' + L + '">保存ファイル名</label><input id="syncPath" class="' + F + '" value="' + esc(syncCfg.path || 'str-portal-data.json') + '" placeholder="str-portal-data.json"></div>'
+    + '</div>'
+    + '<div><label class="' + L + '">アクセストークン（GitHub Fine-grained PAT ／ Contents: Read and write）</label><input id="syncToken" type="password" class="' + F + '" value="' + esc(syncCfg.token) + '" placeholder="github_pat_…"></div>'
+    + '<label class="flex items-center gap-2 text-slate-300 font-bold"><input id="syncAuto" type="checkbox" class="w-4 h-4 rounded border-slate-600"' + (syncCfg.autoSave ? ' checked' : '') + '>変更を自動でクラウド保存する（数秒後に反映）</label>'
+    + '<div class="flex flex-wrap gap-2 pt-1">'
+    + '<button type="button" data-act="sync-save" class="h-10 px-3.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 font-black transition">設定を保存</button>'
+    + '<button type="button" data-act="sync-test" class="h-10 px-3.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-bold transition">接続テスト</button>'
+    + '<button type="button" data-act="sync-push" class="h-10 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition">クラウドへ保存</button>'
+    + '<button type="button" data-act="sync-pull" class="h-10 px-3.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-bold transition">クラウドから読み込む</button>'
+    + '</div>'
+    + '<p class="text-[11px] text-slate-400 leading-relaxed">※ 保存後、GitHub Pages の再ビルドで全端末に反映されるまで約1分かかります。<br>※ トークンを用意しない場合は、JSONエクスポートしたファイルを GitHub 上で <code class="text-amber-300">' + esc(syncCfg.path || 'str-portal-data.json') + '</code> としてアップロード（コミット）しても全端末に共有できます。</p>'
+    + '</div></details>';
+}
+
 function loadData() {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return clone(DEFAULTS);
-    return migrate(JSON.parse(raw));
+    const parsed = JSON.parse(raw);
+    const m = migrate(parsed);
+    // 修復（重複の統合など）が入った場合は保存し直して再発を防ぐ
+    try { if (JSON.stringify(m) !== JSON.stringify(parsed)) localStorage.setItem(KEY, JSON.stringify(m)); } catch (e) {}
+    return m;
   } catch (e) { return clone(DEFAULTS); }
 }
 function migrate(saved) {
@@ -670,32 +834,63 @@ function migrate(saved) {
   if (!Array.isArray(out.price.groups)) out.price.groups = clone(DEFAULTS.price.groups);
   if (!out.price.notes) out.price.notes = clone(DEFAULTS.price.notes);
   if (!out.meta.archiveDays) out.meta.archiveDays = DEFAULTS.meta.archiveDays || 14;
-  upgradePriceStructure(out);
+  repairPriceGroups(out);
   return out;
 }
-/* 旧バージョンの「切手・金券類」「プレ貨・貴金属・現行銭」というまとめ大カテゴリーを、
-   切手／金券／プレ貨／貴金属／現行銭 の独立した大カテゴリーに自動変換する（既存データを保持） */
-function upgradePriceStructure(out) {
-  const legacy = ['g-kitte', 'g-kikai'];
-  const olds = out.price.groups.filter(g => legacy.indexOf(g.id) >= 0);
-  if (!olds.length) return; // すでに新構造
-  const pool = {};
-  olds.forEach(g => (g.subs || []).forEach(s => (s.items || []).forEach(it => { pool[it.id] = it; })));
-  const keep = out.price.groups.filter(g => legacy.indexOf(g.id) < 0);
-  const fresh = clone(DEFAULTS.price.groups).filter(g => ['g-kitte', 'g-kinken', 'g-prekka', 'g-kizoku', 'g-genko'].indexOf(g.id) >= 0);
-  fresh.forEach(g => g.subs.forEach(s => {
-    s.items = s.items.map(it => pool[it.id] || it);
-    s.items.forEach(it => { if (pool[it.id]) delete pool[it.id]; });
+/* ---------- 売価設定表のデータ修復 ----------
+   (a) 旧・統合大カテゴリー（g-kitte と g-kikai が同時にある旧構造）を
+       切手／金券／プレ貨／貴金属／現行銭 の独立した大カテゴリーへ自動変換
+   (b) 同一IDの大カテゴリーが重複していたら1つに統合（増殖バグの修復）
+   (c) 小カテゴリー内の品目ID重複も統合                                    */
+function repairPriceGroups(out) {
+  const NEW_IDS = ['g-kitte', 'g-kinken', 'g-prekka', 'g-kizoku', 'g-genko'];
+  if (!Array.isArray(out.price.groups)) out.price.groups = clone(DEFAULTS.price.groups);
+  const groups = out.price.groups;
+
+  // (a) 旧構造の検出：g-kitte（切手・金券類）と g-kikai（プレ貨・貴金属・現行銭）が同時に存在
+  const hasLegacy = groups.some(g => g.id === 'g-kitte') && groups.some(g => g.id === 'g-kikai');
+  if (hasLegacy) {
+    const pool = {};
+    groups.filter(g => g.id === 'g-kitte' || g.id === 'g-kikai').forEach(g => (g.subs || []).forEach(s => (s.items || []).forEach(it => { pool[it.id] = it; })));
+    const keep = groups.filter(g => g.id !== 'g-kitte' && g.id !== 'g-kikai');
+    const fresh = clone(DEFAULTS.price.groups).filter(g => NEW_IDS.indexOf(g.id) >= 0);
+    fresh.forEach(g => g.subs.forEach(s => {
+      s.items = s.items.map(it => pool[it.id] || it);
+      s.items.forEach(it => { if (pool[it.id]) delete pool[it.id]; });
+    }));
+    const leftover = Object.keys(pool).map(k => pool[k]);
+    if (leftover.length) fresh[0].subs[0].items = fresh[0].subs[0].items.concat(leftover);
+    out.price.groups = fresh.concat(keep);
+  }
+
+  // (b) 同一IDの大カテゴリーを統合（先頭を残し、後続の小カテゴリーをマージ）
+  const seenG = {}, mergedG = [];
+  out.price.groups.forEach(g => {
+    if (!g || !g.id) { mergedG.push(g); return; }
+    if (!seenG[g.id]) { seenG[g.id] = g; if (!Array.isArray(g.subs)) g.subs = []; mergedG.push(g); return; }
+    const t = seenG[g.id];
+    (g.subs || []).forEach(s => {
+      const ex = t.subs.find(x => x.id === s.id);
+      if (!ex) { t.subs.push(s); return; }
+      if (!Array.isArray(ex.items)) ex.items = [];
+      (s.items || []).forEach(it => { if (!ex.items.some(y => y.id === it.id)) ex.items.push(it); });
+    });
+  });
+  out.price.groups = mergedG;
+
+  // (c) 小カテゴリー内の品目ID重複を除去
+  out.price.groups.forEach(g => (g.subs || []).forEach(s => {
+    if (!Array.isArray(s.items)) { s.items = []; return; }
+    const seen = {};
+    s.items = s.items.filter(it => { if (!it || !it.id) return true; if (seen[it.id]) return false; seen[it.id] = true; return true; });
   }));
-  const leftover = Object.keys(pool).map(k => pool[k]);
-  if (leftover.length) fresh[0].subs[0].items = fresh[0].subs[0].items.concat(leftover);
-  out.price.groups = fresh.concat(keep);
 }
 function save() {
   if (prevState !== null) { undoStack.push(prevState); if (undoStack.length > 30) undoStack.shift(); }
   try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) { showToast('保存できませんでした（容量不足）'); }
   prevState = JSON.stringify(D);
   updateUndoBtn();
+  scheduleAutoSave();
 }
 
 /* ---------- 変更の取り消し（アンドゥ） ---------- */
@@ -752,22 +947,22 @@ function renderNav() {
 }
 
 /* ---------- 管理者用ボタン ---------- */
-function adminBtns(act, id, extra) {
+function adminBtns(act, id, extra, noDel) {
   if (!admin) return '';
   return '<span class="inline-flex items-center gap-1 shrink-0">'
     + '<button type="button" data-act="' + act + '" data-id="' + esc(id) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : '')
     + ' class="grid h-8 w-8 place-items-center rounded-lg bg-white/80 border border-slate-300 text-slate-600 hover:bg-white hover:text-amber-700 transition" title="編集"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>'
-    + '<button type="button" data-act="del-' + act + '" data-id="' + esc(id) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : '')
-    + ' class="grid h-8 w-8 place-items-center rounded-lg bg-white/80 border border-rose-200 text-rose-600 hover:bg-rose-50 transition" title="削除"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>'
+    + (noDel ? '' : '<button type="button" data-act="del-' + act.replace(/^edit-/, '') + '" data-id="' + esc(id) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : '')
+    + ' class="grid h-8 w-8 place-items-center rounded-lg bg-white/80 border border-rose-200 text-rose-600 hover:bg-rose-50 transition" title="削除"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>')
     + '</span>';
 }
-function adminBtnsDark(act, id, extra) {
+function adminBtnsDark(act, id, extra, noDel) {
   if (!admin) return '';
   return '<span class="inline-flex items-center gap-1 shrink-0">'
     + '<button type="button" data-act="' + act + '" data-id="' + esc(id) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : '')
     + ' class="grid h-8 w-8 place-items-center rounded-lg bg-slate-800 border border-slate-600 text-slate-300 hover:text-amber-400 transition" title="編集"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>'
-    + '<button type="button" data-act="del-' + act + '" data-id="' + esc(id) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : '')
-    + ' class="grid h-8 w-8 place-items-center rounded-lg bg-slate-800 border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition" title="削除"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>'
+    + (noDel ? '' : '<button type="button" data-act="del-' + act.replace(/^edit-/, '') + '" data-id="' + esc(id) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : '')
+    + ' class="grid h-8 w-8 place-items-center rounded-lg bg-slate-800 border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition" title="削除"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>')
     + '</span>';
 }
 function addBtn(label, act, id, extra) {
@@ -1013,7 +1208,7 @@ function renderPrice() {
 
   const notes = D.price.notes;
   $('#priceNotes').innerHTML = '<div class="bg-amber-50 p-4 sm:p-5 rounded-2xl border border-amber-200 text-sm text-amber-900">'
-    + '<div class="flex items-start justify-between gap-3"><strong class="text-amber-950 flex items-center gap-2 text-base"><i data-lucide="alert-circle" class="w-5 h-5 text-amber-600"></i><span>' + esc(notes.title) + '</span></strong>' + adminBtns('edit-price-notes', 'notes') + '</div>'
+    + '<div class="flex items-start justify-between gap-3"><strong class="text-amber-950 flex items-center gap-2 text-base"><i data-lucide="alert-circle" class="w-5 h-5 text-amber-600"></i><span>' + esc(notes.title) + '</span></strong>' + adminBtns('edit-price-notes', 'notes', null, true) + '</div>'
     + '<ul class="mt-3 space-y-2 leading-relaxed">' + notes.items.map(i => '<li class="flex items-start gap-2"><span class="shrink-0">✅</span><span>' + esc(i) + '</span></li>').join('') + '</ul></div>';
 
   $('#priceToolLinks').innerHTML = (D.tools || []).filter(t => t.url).map(t =>
@@ -1085,10 +1280,10 @@ function renderManual() {
   const carry = D.manual.carry, line = D.manual.line;
   $('#carryArea').innerHTML =
     '<div class="bg-emerald-50 p-4 sm:p-5 rounded-2xl border border-emerald-200 space-y-2 text-sm text-emerald-900">'
-    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span class="w-5 h-5">' + ICONS.briefcase + '</span><span>' + esc(carry.title) + '</span></div>' + adminBtns('edit-carry', 'carry') + '</div>'
+    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span class="w-5 h-5">' + ICONS.briefcase + '</span><span>' + esc(carry.title) + '</span></div>' + adminBtns('edit-carry', 'carry', null, true) + '</div>'
     + '<p class="leading-relaxed">' + esc(carry.body) + '</p></div>'
     + '<div class="bg-indigo-50 p-4 sm:p-5 rounded-2xl border border-indigo-200 space-y-2 text-sm text-indigo-900">'
-    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span class="w-5 h-5">' + ICONS.chart + '</span><span>' + esc(line.title) + '</span></div>' + adminBtns('edit-line', 'line') + '</div>'
+    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span class="w-5 h-5">' + ICONS.chart + '</span><span>' + esc(line.title) + '</span></div>' + adminBtns('edit-line', 'line', null, true) + '</div>'
     + '<p class="leading-relaxed">' + esc(line.body) + '</p>'
     + (line.body2 ? '<p class="leading-relaxed font-semibold">' + esc(line.body2) + '</p>' : '')
     + '</div>';
@@ -1105,7 +1300,7 @@ function renderExpense() {
     + (admin ? '<div class="sm:col-span-2 lg:col-span-4">' + addBtn('項目を追加', 'add-exp') + '</div>' : '');
   const n = D.expense.notes;
   $('#expenseNotes').innerHTML = '<div class="bg-blue-50 p-4 sm:p-5 rounded-2xl border border-blue-200 text-sm text-blue-900 space-y-2.5">'
-    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span>📝</span><span>' + esc(n.title) + '</span></div>' + adminBtns('edit-exp-notes', 'notes') + '</div>'
+    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span>📝</span><span>' + esc(n.title) + '</span></div>' + adminBtns('edit-exp-notes', 'notes', null, true) + '</div>'
     + '<ul class="space-y-2 leading-relaxed">' + n.items.map(i => '<li class="flex items-start gap-2"><span class="shrink-0">・</span><span>' + esc(i) + '</span></li>').join('') + '</ul></div>';
 }
 
@@ -1132,7 +1327,7 @@ function renderTools() {
   }).join('') + (admin ? '<div class="sm:col-span-2 lg:col-span-3">' + addBtn('リンクを追加', 'add-tool') + '</div>' : '');
   const n = D.toolNotes;
   if (n) $('#toolNotes').innerHTML = '<div class="bg-sky-50 p-4 sm:p-5 rounded-2xl border border-sky-200 text-sm text-sky-900 space-y-2.5">'
-    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span>💡</span><span>' + esc(n.title) + '</span></div>' + adminBtns('edit-tool-notes', 'notes') + '</div>'
+    + '<div class="flex items-start justify-between gap-3"><div class="font-bold flex items-center gap-2 text-base"><span>💡</span><span>' + esc(n.title) + '</span></div>' + adminBtns('edit-tool-notes', 'notes', null, true) + '</div>'
     + '<ul class="space-y-2 leading-relaxed">' + n.items.map(i => '<li class="flex items-start gap-2"><span class="shrink-0">・</span><span>' + esc(i) + '</span></li>').join('') + '</ul></div>';
   else $('#toolNotes').innerHTML = '';
 }
@@ -1185,12 +1380,14 @@ function renderAll() {
   $('#priceTitle').textContent = D.meta.priceTitle;
   $$('.admin-only').forEach(el => { el.classList.toggle('hidden', !admin); el.classList.toggle('inline-flex', admin); });
   renderCategoryManager();
+  renderSyncPanel();
   renderQuick();
   renderNews();
   renderPrice();
   renderTools();
   renderManual();
   renderExpense();
+  const li = $('#lastSyncInfo'); if (li) li.textContent = fmtLastSync();
   updateUndoBtn();
   lucide.createIcons();
   handleScroll();
@@ -1518,7 +1715,8 @@ document.addEventListener('click', e => {
     'cat-add': addCategory, 'cat-save': () => saveCategory(Number(id)), 'cat-del': () => delCategory(Number(id)),
     'arch-expand': () => setAllArch(true), 'arch-collapse': () => setAllArch(false),
     'add-tool': () => openToolEditor(null), 'edit-tool': () => openToolEditor(id), 'del-tool': () => removeAt('tool', id),
-    'edit-tool-notes': () => openNotesEditor('tool')
+    'edit-tool-notes': () => openNotesEditor('tool'),
+    'sync-save': saveSyncSettings, 'sync-test': testSync, 'sync-push': () => pushShared(false), 'sync-pull': () => pullShared(false)
   };
   if (map[act]) { e.preventDefault(); map[act](); }
 });
@@ -1603,8 +1801,20 @@ document.addEventListener('change', e => {
 /* ---------- 初期化 ---------- */
 $('#todayDate').textContent = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 renderNav();
-renderAll();
-lucide.createIcons();
+(async function init() {
+  const url = (syncCfg.readUrl || SYNC_READ_URL || '').trim();
+  if (url) {
+    try {
+      const j = await fetchShared(url);
+      D = migrate(j);
+      prevState = JSON.stringify(D);
+      try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {}
+      syncCfg.lastSync = new Date().toISOString(); saveSyncCfg();
+    } catch (e) { /* 公開データがまだ無い場合は端末内データを使用 */ }
+  }
+  renderAll();
+  lucide.createIcons();
+})();
 
     </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
