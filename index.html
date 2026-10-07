@@ -947,6 +947,7 @@ function migrate(saved) {
     if (c.desc === undefined) c.desc = '';
     c.blocks.forEach(b => { if (b.icon === undefined) b.icon = 'box'; if (b.color === undefined) b.color = c.color; if (b.group === undefined) b.group = ''; });
   });
+  healCustomSections(out);
   if (!Array.isArray(out.sectionOrder)) out.sectionOrder = clone(DEFAULTS.sectionOrder);
   const allKeys = out.sections.map(s => s.key).concat(out.customSections.map(c => c.id));
   out.sectionOrder = out.sectionOrder.filter(k => allKeys.indexOf(k) >= 0);
@@ -956,6 +957,21 @@ function migrate(saved) {
   if (!out.meta.archiveDays) out.meta.archiveDays = DEFAULTS.meta.archiveDays || 14;
   repairPriceGroups(out);
   return out;
+}
+/* クラウド保存データが古い場合に、組み込みの自由セクション内容へ自動修復する。
+   （未入力のプレースホルダ「（ここに…」が残っているときだけ差し替える） */
+function healCustomSections(out) {
+  const PH = '（ここに';
+  (DEFAULTS.customSections || []).forEach(dcs => {
+    const cur = (out.customSections || []).find(c => c.id === dcs.id);
+    if (!cur) return;
+    const txt = (cur.blocks || []).map(b => String(b.content || '') + String(b.body || '') + (b.bullets || []).join('')).join('');
+    if (!(cur.blocks || []).length || txt.indexOf(PH) >= 0) {
+      cur.blocks = clone(dcs.blocks);
+      if (!cur.desc) cur.desc = dcs.desc || '';
+      if (!cur.title) cur.title = dcs.title;
+    }
+  });
 }
 /* ---------- 売価設定表のデータ修復 ----------
    (a) 旧・統合大カテゴリー（g-kitte と g-kikai が同時にある旧構造）を
@@ -2216,9 +2232,12 @@ renderNav();
   if (url) {
     try {
       const j = await fetchShared(url);
+      const before = JSON.stringify(j);
       D = migrate(j);
       prevState = JSON.stringify(D);
       try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {}
+      // 古いクラウドデータを修復した場合は保存し直して全端末へ配信する
+      if (JSON.stringify(D) !== before) { try { save(); } catch (e) {} }
       syncCfg.lastSync = new Date().toISOString(); saveSyncCfg();
     } catch (e) { /* 公開データがまだ無い場合は端末内データを使用 */ }
   }
