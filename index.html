@@ -493,7 +493,20 @@ const ICONS = {
   link:   svg('<path d="M9.6 14.4l4.8-4.8"/><path d="M7.4 10.6L6 12a3.6 3.6 0 0 0 5.1 5.1l1.4-1.4"/><path d="M16.6 13.4L18 12a3.6 3.6 0 0 0-5.1-5.1l-1.4 1.4"/>'),
   list:   svg('<path d="M3.5 6.6l1.9 1.9 3-3"/><path d="M3.5 12.6l1.9 1.9 3-3"/><path d="M3.5 18.6l1.9 1.9 3-3"/><path d="M11.2 7.2h9.3M11.2 13.2h9.3M11.2 19.2h9.3"/>'),
   receipt:svg('<path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9.2 8.4h5.6M9.2 12.4h5.6"/>'),
-  layout: svg('<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.8 4.5v15"/>')
+  layout: svg('<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.8 4.5v15"/>'),
+  phone:  svg('<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/>'),
+  tag:    svg('<path d="M4 11.2V5.5A1.5 1.5 0 0 1 5.5 4h5.7a2 2 0 0 1 1.4.6l7 7a2 2 0 0 1 0 2.8l-5.2 5.2a2 2 0 0 1-2.8 0l-7-7a2 2 0 0 1-.6-1.4z"/><circle cx="8.5" cy="8.5" r="1.3"/>'),
+  pin:    svg('<path d="M12 21v-5.5"/><path d="M8.5 4.5h7l-.8 4.2 2.3 2.3v1.5H7v-1.5l2.3-2.3z"/>'),
+  book:   svg('<path d="M4 5.2A2.2 2.2 0 0 1 6.2 3H19v15.5H6.2A2.2 2.2 0 0 0 4 20.7z"/><path d="M4 18.5A2.2 2.2 0 0 1 6.2 16.3H19"/>'),
+  alert:  svg('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.2"/><path d="M12 16.2h.01"/>'),
+  yen:    svg('<path d="M7 5l5 6 5-6"/><path d="M12 11v8"/><path d="M8 13h8M8 16h8"/>'),
+  recycle:svg('<path d="M7.5 9.5L5.8 12a2.5 2.5 0 0 0 2.1 3.8H9"/><path d="M12 4.6l2.2 3.8"/><path d="M16.5 9.5H19a2.5 2.5 0 0 1 2.1 3.8l-1.6 2.7"/><path d="M9 19.4h6"/>'),
+  ring:   svg('<circle cx="12" cy="14.5" r="5.5"/><path d="M9.5 9.2L12 5.5l2.5 3.7"/>'),
+  battery:svg('<rect x="3" y="8" width="15" height="8" rx="2"/><path d="M21 11v2"/><path d="M6 11v2M9 11v2"/>'),
+  magnet: svg('<path d="M6 4v7a6 6 0 0 0 12 0V4"/><path d="M6 8h4M14 8h4"/>'),
+  ticket: svg('<path d="M4 9.5V7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v2a2.5 2.5 0 0 0 0 5v2A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.5v-2a2.5 2.5 0 0 0 0-5z"/>'),
+  trash:  svg('<path d="M5 7h14"/><path d="M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7"/><path d="M7 7l.9 12A1.5 1.5 0 0 0 9.4 20.5h5.2A1.5 1.5 0 0 0 16 19l.9-12"/>'),
+  scissors:svg('<circle cx="6.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/><path d="M8.6 8.4L20 19"/><path d="M8.6 15.6L20 5"/>')
 };
 
 /* ---------- 初期データ ---------- */
@@ -649,9 +662,81 @@ const DEFAULTS = {
   ],
   sectionOrder: ['quick', 'news', 'price', 'links', 'manual', 'c-shikake', 'expense'],
   customSections: [
-    { id: 'c-shikake', title: '買取後の品物の仕分け方', icon: 'box', color: 'teal', hidden: false, blocks: [
-      { id: 'b-shikake-1', title: '仕分けの基本ルール', body: '（ここに仕分けの基本ルールを入力してください）', bullets: ['（例）買取した品物はその日のうちに仕分ける', '（例）カテゴリーごとに袋・箱を分ける'] },
-      { id: 'b-shikake-2', title: '仕分け先・置き場所', body: '（ここに仕分け先や置き場所、持ち帰りルールを入力してください）', bullets: ['（例）高額品（貴金属・ブランド・時計）は必ず持ち帰る'] }
+    { id: 'c-shikake', title: '買取後の品物の仕分け方', icon: 'box', color: 'teal', hidden: false,
+      desc: '社内での催事買取や店舗回収における、商材ごとの正しい仕分け・処理ルールをまとめています。作業前に必ずご確認ください。',
+      blocks: [
+      { id: 'b-shikake-1', title: 'ブランド・メッキアクセサリーの判定基準', icon: 'gem', color: 'pink', group: '', content: [
+        '## 判断の基本',
+        '- 「ブランドあり」 → 個別GD（付箋＋パケ入れ）',
+        '- 「ブランドなし」 → ビーズ／メッキの2分類',
+        '! メッキ素材であってもハイブランドアクセサリー（シャネル、ディオール、エルメスなど）は存在するため、素材ではなく「ブランドの有無」を最優先して判断します。'
+      ].join('\n') },
+      { id: 'b-shikake-2', title: '貴金属アクセサリーの仕分けルール', icon: 'ring', color: 'amber', group: '', content: [
+        '## ① 指輪・イヤリング・ピアス',
+        '- 石付きの指輪・イヤリング・ピアス：石が付いていれば、1点ずつ個別パケにする',
+        '- 石なしの指輪・イヤリング・ピアス、その他金製品：まとめてパケに入れてOK',
+        '## ② ネックレスの仕分け',
+        '- 石なしのネックレス：同じ品位であれば、複数まとめて1つのパケでOK',
+        '- 石付きのネックレス：品位ごとのパケにはまとめず、完全な個別管理とする',
+        '  - ネックレスは絡まり防止のため、石の種類や評価額に関係なく、何らかの石が付いていればすべて個別対象です。',
+        '## ③ 「石付き」として個別パケにする対象範囲（石の基準）',
+        '- 基本対象となる評価が見込める宝石：ダイヤモンド / サファイア / エメラルド / ルビー / サンゴ / 翡翠 / オパール / 真珠',
+        '! ただしネックレスは、上記に関わらず何らかの石が付いていればすべて個別対象になります。',
+        '## ④ コンビ製品・品位不明品',
+        '- コンビ製品（K18／Pt900など複製品位）：「コンビ品」として、コンビの品位毎に分けてまとめる',
+        '- 刻印なし・品位不明の貴金属：「品位不明」として別パケにまとめる',
+        '## ⑤ 金歯・金貨・磁気確認',
+        '- 金歯：形状や刻印に関係なくまとめてパケに入れ「金歯まとめ」と記載（計算はすべて K10 で統一）',
+        '- 地金型金貨：1枚ずつ小パケに入れ、「買取日」と「当日売価」を必ず記入する（例：2026年10月1日 398000円）',
+        '## 磁気反応の確認（必須）',
+        '- 🧲 磁石にくっつく場合 → メッキ・鉄の可能性あり（別保管）',
+        '- ⚪️ 磁石にくっつかない場合 → 貴金属の可能性あり（通常仕分け）'
+      ].join('\n') },
+      { id: 'b-shikake-3', title: '切手の仕分け基準', icon: 'stamp', color: 'indigo', group: '', content: [
+        '- 切手は必ず以下の 2種類 に分けて仕分けます。',
+        '  - 📄 シート：10枚以上繋がっていて、四隅が切れていないもの',
+        '  - 🏷️ バラ：上記以外のもの',
+        '! 使いかけの切手はすべて「バラ」扱いです。',
+        '## 未使用品の定義',
+        '- ノリがついていること、紙や台紙に貼っていないこと、破れ・濡れ等の破損がないことが条件です。'
+      ].join('\n') },
+      { id: 'b-shikake-4', title: 'ガラケー・スマートフォンの仕分け・処理', icon: 'phone', color: 'sky', group: '', content: [
+        '## 📵 ガラケーの分解・仕分け',
+        '- ガラケーは必ず以下の 3つに分解・分別 してください。',
+        '  - 🔋 バッテリー：まとめて処理',
+        '  - 📱 本体（バッテリーなし）：まとめて処理',
+        '  - 🗑️ 裏蓋：ゴミとして処分',
+        '! 得意先からの「バッテリーとスマホの混入報告」が多発しています。スマホとガラケーは必ず分けてください。（※ただし、バッテリーが外れるタイプのスマホはガラケーの扱いと一緒にしてもOK）',
+        '## 📲 スマートフォンの仕分け',
+        '- 初期化確認を行い、動作に問題がないことを確認する。',
+        '- 売価5,000円以上の商品は、まとめずに個別にパケに入れて処理する。'
+      ].join('\n') },
+      { id: 'b-shikake-5', title: '各種まとめ商材の処理方法（5,000円以下など）', icon: 'box', color: 'emerald', group: '', content: [
+        '- 「5,000円以下」または値段がつきにくいものは、種類ごとにまとめて袋や段ボールに入れてOKです。',
+        '- 🪙 金銭・古銭・現行銭：海外銭と古銭の雑銭、現行銭はまとめてOK',
+        '  - プレ貨の個別査定品とは分ける',
+        '- ⌚ NB時計（ノーブランド時計）：まとめ処理',
+        '- 📷 5,000円以下のカメラ：まとめ処理',
+        '  - 充電器・バッテリーがない場合の箱は処分してOK',
+        '  - 稼働・不動はこちらで確認するため記載不要',
+        '- ✒️ 筆記具・ライター：ライター、万年筆、ペン',
+        '  - 高級ブランド品は個別確認',
+        '- 🎟️ テレカ・金券：種類ごとに分けて、金券用の大きな袋でまとめる'
+      ].join('\n') },
+      { id: 'b-shikake-6', title: '個別売価（GD値踏み）商品の処理手順', icon: 'tag', color: 'violet', group: '', content: [
+        '- ブランドバッグ、ブランド小物、時計、カメラ、ブランドアクセなど、個別売価（GD値踏み）をしたものは、必ず以下の手順で処理します。',
+        '## 📝 付箋に以下の4項目を記入し、パケに入れる',
+        '- 買取日（例：2026/10/01）',
+        '- 会場名（例：あかのれん大垣）',
+        '- お客様氏名（例：テスト太郎様）',
+        '- GD（例：GD：￥30,000〜￥40,000）'
+      ].join('\n') },
+      { id: 'b-shikake-7', title: 'その他・注意事項', icon: 'pin', color: 'slate', group: '', content: [
+        '## 💰 価格の記載について',
+        '- メルカリの売価や販売価格の記載は不要です。',
+        '## ♻️ ゴミの分別について',
+        '- これまでゴミ袋にペットボトルなどを一緒に入れていたと思いますが、今後はできるだけ分別して捨ててください。'
+      ].join('\n') }
     ] }
   ]
 };
@@ -857,7 +942,11 @@ function migrate(saved) {
   if (!Array.isArray(out.sections)) out.sections = clone(DEFAULTS.sections);
   else DEFAULTS.sections.forEach(d => { if (!out.sections.some(s => s.key === d.key)) out.sections.push(clone(d)); });
   if (!Array.isArray(out.customSections)) out.customSections = clone(DEFAULTS.customSections);
-  out.customSections.forEach(c => { if (!Array.isArray(c.blocks)) c.blocks = []; });
+  out.customSections.forEach(c => {
+    if (!Array.isArray(c.blocks)) c.blocks = [];
+    if (c.desc === undefined) c.desc = '';
+    c.blocks.forEach(b => { if (b.icon === undefined) b.icon = 'box'; if (b.color === undefined) b.color = c.color; if (b.group === undefined) b.group = ''; });
+  });
   if (!Array.isArray(out.sectionOrder)) out.sectionOrder = clone(DEFAULTS.sectionOrder);
   const allKeys = out.sections.map(s => s.key).concat(out.customSections.map(c => c.id));
   out.sectionOrder = out.sectionOrder.filter(k => allKeys.indexOf(k) >= 0);
@@ -1656,7 +1745,7 @@ function applySections() {
         + '<button type="button" data-act="add-block" data-id="' + esc(cs.id) + '" class="admin-only hidden h-9 px-3 rounded-lg bg-amber-500 text-slate-900 text-xs font-black transition items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i>項目を追加</button>'
         + '<button type="button" data-act="edit-csec" data-id="' + esc(cs.id) + '" class="admin-only hidden h-9 px-3 rounded-lg bg-slate-800 border border-slate-600 text-slate-200 text-xs font-bold transition items-center gap-1.5"><i data-lucide="pencil" class="w-3.5 h-3.5"></i>セクション編集</button>'
         + '</div></div>'
-        + '<div class="p-5 sm:p-6 space-y-5"><div data-custom-body></div></div>';
+        + '<div class="p-5 sm:p-6"><div data-custom-body class="space-y-5"></div></div>';
       main.appendChild(el);
     }
     const col = pal(cs.color);
@@ -1691,21 +1780,113 @@ function applySections() {
   const newsEl = main.querySelector(':scope > section[data-sec="news"]');
   if (ap && newsEl && !newsEl.classList.contains('hidden')) main.insertBefore(ap, newsEl);
 }
+/* ---------- 自由セクションの本文マークアップ ----------
+   ・「## 見出し」   → 小見出し
+   ・「- 箇条書き」   → 箇条書き（先頭に半角スペース2つで入れ子）
+   ・「! 注意書き」   → 注意ボックス
+   ・行頭の絵文字     → 自動でアイコンに変換（絵文字が浮かない）
+   ・その他の行       → 段落（連続する行は同じ段落内で改行）                */
+const EMOJI_ICON = {
+  '⚠️': 'alert', '⚠': 'alert', '🔋': 'battery', '📱': 'phone', '📲': 'phone', '📵': 'phone',
+  '🗑️': 'trash', '🗑': 'trash', '🧲': 'magnet', '📄': 'file', '🏷️': 'tag', '🏷': 'tag',
+  '🪙': 'coin', '⌚': 'watch', '📷': 'camera', '✒️': 'pen', '✒': 'pen', '🎟️': 'ticket', '🎟': 'ticket',
+  '💰': 'yen', '♻️': 'recycle', '♻': 'recycle', '📝': 'pen', '💎': 'gem', '💍': 'ring',
+  '✂️': 'scissors', '✂': 'scissors', '📦': 'box', '📌': 'pin', '🗂️': 'book', '🗂': 'book',
+  '🔍': 'search', '🧾': 'receipt', '📊': 'chart', '🕒': 'clock', '🔗': 'link', '📋': 'list'
+};
+const EMOJI_STRIP = ['⚪️', '⚪', '✅', '🔹', '🔸', '▶️', '▶', '●', '◆', '★', '・'];
+function splitLeadingEmoji(s) {
+  const str = String(s == null ? '' : s);
+  const keys = Object.keys(EMOJI_ICON).sort((a, b) => b.length - a.length);
+  for (let i = 0; i < keys.length; i++) if (str.indexOf(keys[i]) === 0) return { icon: EMOJI_ICON[keys[i]], rest: str.slice(keys[i].length).replace(/^\s+/, '') };
+  for (let i = 0; i < EMOJI_STRIP.length; i++) if (str.indexOf(EMOJI_STRIP[i]) === 0) return { icon: null, rest: str.slice(EMOJI_STRIP[i].length).replace(/^\s+/, '') };
+  return { icon: undefined, rest: str };
+}
+function iconBadge(key) {
+  return '<span class="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-white border border-slate-200 text-slate-500">' + (ICONS[key] || ICONS.box) + '</span>';
+}
+function richBlock(text) {
+  const lines = String(text == null ? '' : text).split('\n');
+  let html = '', inList = false, para = [];
+  const flushPara = () => { if (para.length) { html += '<p class="text-sm text-slate-700 leading-relaxed">' + para.map(esc).join('<br>') + '</p>'; para = []; } };
+  const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
+  lines.forEach(raw => {
+    const line = raw.replace(/\s+$/, '');
+    if (!line.trim()) { flushPara(); closeList(); return; }
+    let m;
+    if ((m = line.match(/^\s*##\s+(.*)$/))) {
+      flushPara(); closeList();
+      const h = splitLeadingEmoji(m[1]);
+      html += '<h4 class="font-bold text-slate-900 text-sm pt-1.5 flex items-start gap-2">' + (h.icon ? iconBadge(h.icon) : '') + '<span>' + esc(h.rest) + '</span></h4>';
+      return;
+    }
+    if ((m = line.match(/^\s*!\s+(.*)$/))) {
+      flushPara(); closeList();
+      const w = splitLeadingEmoji(m[1]);
+      html += '<div class="flex items-start gap-2.5 text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2.5 leading-relaxed"><span class="w-4 h-4 shrink-0 mt-0.5 text-amber-600">' + ICONS.alert + '</span><span>' + esc(w.rest) + '</span></div>';
+      return;
+    }
+    if ((m = line.match(/^(\s*)[-・]\s+(.*)$/))) {
+      flushPara();
+      const level = Math.floor(m[1].length / 2);
+      if (!inList) { inList = true; html += '<ul class="space-y-1.5 text-sm text-slate-700 leading-relaxed">'; }
+      const s = splitLeadingEmoji(m[2]);
+      const marker = (s.icon && level === 0)
+        ? iconBadge(s.icon)
+        : '<span class="shrink-0 ' + (level > 0 ? 'text-slate-300' : 'text-slate-400') + '">' + (level > 0 ? '–' : '・') + '</span>';
+      html += '<li class="flex items-start gap-2' + (level > 0 ? ' ml-5 text-[13px] text-slate-600' : '') + '">' + marker + '<span>' + esc(s.rest) + '</span></li>';
+      return;
+    }
+    closeList();
+    para.push(line);
+  });
+  flushPara(); closeList();
+  return html;
+}
+function blockContent(b) {
+  if (b.content !== undefined) return b.content;
+  return [b.body || ''].concat((b.bullets || []).map(x => '- ' + x)).filter(s => String(s).trim()).join('\n');
+}
+function blockHtml(cs, b) {
+  const col = pal(b.color || cs.color);
+  const move = admin
+    ? '<button type="button" data-act="blk-up" data-id="' + esc(b.id) + '" data-extra="' + esc(cs.id) + '" class="grid h-8 w-8 place-items-center rounded-lg bg-white/80 border border-slate-300 text-slate-600 hover:text-amber-700 transition" title="上へ"><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>'
+      + '<button type="button" data-act="blk-down" data-id="' + esc(b.id) + '" data-extra="' + esc(cs.id) + '" class="grid h-8 w-8 place-items-center rounded-lg bg-white/80 border border-slate-300 text-slate-600 hover:text-amber-700 transition" title="下へ"><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>'
+    : '';
+  return '<div class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden scroll-mt-40" data-block="' + esc(b.id) + '" id="blk-' + esc(b.id) + '">'
+    + '<div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b" style="background:' + col.bg + ';border-color:' + col.bd + '">'
+    + '<div class="flex items-center gap-2.5 min-w-0">'
+    + '<span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl" style="background:#fff;color:' + col.fg + ';border:1px solid ' + col.bd + '">' + (ICONS[b.icon] || ICONS.box) + '</span>'
+    + '<h3 class="font-bold text-base leading-snug" style="color:' + col.fg + '">' + esc(b.title) + '</h3></div>'
+    + '<span class="flex items-center gap-1 shrink-0">' + move + adminBtns('edit-block', b.id, cs.id) + '</span>'
+    + '</div>'
+    + '<div class="p-4 sm:p-5 space-y-2.5">' + richBlock(blockContent(b)) + '</div></div>';
+}
 function renderCustomSections() {
   (D.customSections || []).forEach(cs => {
     const el = document.querySelector('main > section[data-sec="' + cs.id + '"]');
     if (!el) return;
     const body = el.querySelector('[data-custom-body]');
     if (!body) return;
-    body.innerHTML = (cs.blocks || []).map(b =>
-      '<div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-2.5" data-block="' + esc(b.id) + '">'
-      + '<div class="flex items-start justify-between gap-3">'
-      + '<h3 class="font-bold text-slate-900 text-base leading-snug">' + esc(b.title) + '</h3>'
-      + adminBtns('edit-block', b.id, cs.id) + '</div>'
-      + (b.body ? '<p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">' + esc(b.body) + '</p>' : '')
-      + ((b.bullets && b.bullets.length) ? '<ul class="space-y-2 text-sm text-slate-700 leading-relaxed">' + b.bullets.map(x => '<li class="flex items-start gap-2"><span class="shrink-0 text-slate-400">・</span><span>' + esc(x) + '</span></li>').join('') + '</ul>' : '')
-      + '</div>').join('')
-      + (admin ? '<div>' + addBtn('項目を追加', 'add-block', cs.id) + '</div>' : '');
+    const blocks = cs.blocks || [];
+    const desc = cs.desc ? '<p class="text-sm text-slate-600 leading-relaxed">' + esc(cs.desc) + '</p>' : '';
+    const toc = blocks.length > 1
+      ? '<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-3">'
+        + '<p class="font-bold text-slate-900 text-sm flex items-center gap-2"><span class="w-4 h-4 text-slate-500">' + ICONS.book + '</span>目次</p>'
+        + '<ol class="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">'
+        + blocks.map((b, i) => '<li class="flex items-start gap-2.5"><span class="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-slate-200 text-slate-600 text-[11px] font-black tabular-nums">' + (i + 1) + '</span><a href="#blk-' + esc(b.id) + '" class="text-slate-700 hover:text-amber-700 hover:underline leading-relaxed">' + esc(b.title) + '</a></li>').join('')
+        + '</ol></div>'
+      : '';
+    let out = '', curGroup = null;
+    blocks.forEach(b => {
+      const g = (b.group || '').trim();
+      if (g !== curGroup) {
+        if (g) out += '<div class="flex items-center gap-2.5 pt-1"><span class="w-4 h-4 text-slate-400">' + ICONS.list + '</span><h3 class="font-black text-slate-900 text-sm">' + esc(g) + '</h3><span class="flex-1 h-px bg-slate-200"></span></div>';
+        curGroup = g;
+      }
+      out += blockHtml(cs, b);
+    });
+    body.innerHTML = desc + toc + out + (admin ? '<div>' + addBtn('項目を追加', 'add-block', cs.id) + '</div>' : '');
   });
 }
 function renderSectionManager() {
@@ -1766,10 +1947,11 @@ function openCustomSectionEditor(id) {
     title: c ? 'セクションを編集' : 'セクションを追加', desc: 'ページ内に新しい大セクションを作成します。',
     fields: [
       { name: 'title', label: 'セクション名', value: c ? c.title : '', required: true, placeholder: '例：買取後の品物の仕分け方' },
+      { name: 'desc', label: '説明文（任意）', type: 'textarea', rows: 2, value: c ? (c.desc || '') : '', placeholder: 'セクションの冒頭に表示されます' },
       iconSelect(c ? c.icon : 'box'), colorSelect(c ? c.color : 'teal')
     ],
     onSubmit: fd => {
-      const rec = { id: c ? c.id : uid('c-'), title: fd.get('title').trim(), icon: fd.get('icon'), color: fd.get('color'), hidden: c ? !!c.hidden : false, blocks: c ? c.blocks : [] };
+      const rec = { id: c ? c.id : uid('c-'), title: fd.get('title').trim(), desc: fd.get('desc').trim(), icon: fd.get('icon'), color: fd.get('color'), hidden: c ? !!c.hidden : false, blocks: c ? c.blocks : [] };
       if (c) Object.assign(c, rec); else { D.customSections.push(rec); D.sectionOrder.push(rec.id); }
       save(); closeEditor(); renderAll(); lucide.createIcons();
       showToast(c ? 'セクションを更新しました' : 'セクションを追加しました。中身の項目を追加してください');
@@ -1789,16 +1971,26 @@ function openCustomBlockEditor(sectionId, blockId) {
   openEditor({
     title: b ? '項目を編集' : '項目を追加', desc: '「' + cs.title + '」の中に表示されます。',
     fields: [
-      { name: 'title', label: '見出し', value: b ? b.title : '', required: true, placeholder: '例：仕分けの基本ルール' },
-      { name: 'body', label: '本文（任意）', type: 'textarea', rows: 4, value: b ? (b.body || '') : '', placeholder: '説明文を入力（改行できます）' },
-      { name: 'bullets', label: '箇条書き（1行に1項目）', type: 'textarea', rows: 4, value: b ? (b.bullets || []).join('\n') : '', placeholder: '例：その日のうちに仕分ける' }
+      { name: 'title', label: '見出し', value: b ? b.title : '', required: true, placeholder: '例：切手の仕分け基準' },
+      iconSelect(b ? b.icon : 'box'), colorSelect(b ? (b.color || cs.color) : cs.color),
+      { name: 'group', label: 'グループ名（任意）', value: b ? (b.group || '') : '', placeholder: '例：貴金属の仕分け（同じ名前を付けた項目が同じセクションにまとまります）' },
+      { name: 'content', label: '内容', type: 'textarea', rows: 14, value: b ? blockContent(b) : '',
+        hint: '「## 」＝小見出し／「- 」＝箇条書き（先頭に半角スペース2つで入れ子）／「! 」＝注意ボックス／それ以外は段落。行頭の絵文字（例 🔋 📱 🗑️）は自動でアイコンに変換されます。' }
     ],
     onSubmit: fd => {
-      const rec = { id: b ? b.id : uid('b-'), title: fd.get('title').trim(), body: fd.get('body').trim(), bullets: fd.get('bullets').split('\n').map(s => s.trim()).filter(Boolean) };
-      if (b) Object.assign(b, rec); else cs.blocks.push(rec);
+      const rec = { id: b ? b.id : uid('b-'), title: fd.get('title').trim(), icon: fd.get('icon'), color: fd.get('color'), group: fd.get('group').trim(), content: fd.get('content').replace(/\s+$/, '') };
+      if (b) { Object.assign(b, rec); delete b.body; delete b.bullets; } else cs.blocks.push(rec);
       save(); closeEditor(); renderAll(); lucide.createIcons(); showToast(b ? '更新しました' : '追加しました');
     }
   });
+}
+function moveBlock(sectionId, blockId, dir) {
+  const cs = (D.customSections || []).find(x => x.id === sectionId); if (!cs) return;
+  const i = cs.blocks.findIndex(x => x.id === blockId); if (i < 0) return;
+  const j = dir < 0 ? i - 1 : i + 1;
+  if (j < 0 || j >= cs.blocks.length) return;
+  const t = cs.blocks[i]; cs.blocks[i] = cs.blocks[j]; cs.blocks[j] = t;
+  save(); renderAll(); lucide.createIcons();
 }
 
 function openStepEditor(kind, id) {
@@ -1933,7 +2125,8 @@ document.addEventListener('click', e => {
     'sync-save': saveSyncSettings, 'sync-test': testSync, 'sync-push': () => pushShared(false), 'sync-pull': () => pullShared(false),
     'add-csec': () => openCustomSectionEditor(null), 'edit-csec': () => openCustomSectionEditor(id), 'del-csec': () => deleteCustomSection(id),
     'edit-sec': () => openSectionEditor(id), 'sec-up': () => moveSection(id, -1), 'sec-down': () => moveSection(id, 1), 'sec-hide': () => toggleSectionHidden(id),
-    'add-block': () => openCustomBlockEditor(id, null), 'edit-block': () => openCustomBlockEditor(extra, id), 'del-block': () => removeAt('block', id, extra)
+    'add-block': () => openCustomBlockEditor(id, null), 'edit-block': () => openCustomBlockEditor(extra, id), 'del-block': () => removeAt('block', id, extra),
+    'blk-up': () => moveBlock(extra, id, -1), 'blk-down': () => moveBlock(extra, id, 1)
   };
   if (map[act]) { e.preventDefault(); map[act](); }
 });
