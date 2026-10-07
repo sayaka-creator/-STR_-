@@ -85,6 +85,7 @@
                 </button>
             </div>
             <div id="syncPanel"></div>
+            <div id="sectionManager" class="bg-slate-800/60 rounded-2xl p-4 space-y-3"></div>
             <div id="categoryManager" class="bg-slate-800/60 rounded-2xl p-4 space-y-3"></div>
         </section>
 
@@ -155,11 +156,11 @@
         </section>
 
         <!-- 勤怠・連絡ルール -->
-        <section id="quick" class="scroll-mt-40 space-y-4">
+        <section id="quick" data-sec="quick" class="scroll-mt-40 space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
-                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-700"><i data-lucide="zap" class="w-4.5 h-4.5"></i></span>
-                    <h2 class="text-lg font-bold text-slate-900">勤怠・連絡ルール</h2>
+                    <span data-sec-icon class="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-700"><i data-lucide="zap" class="w-4.5 h-4.5"></i></span>
+                    <h2 data-sec-title class="text-lg font-bold text-slate-900">勤怠・連絡ルール</h2>
                 </div>
                 <button data-act="add-quick" class="admin-only hidden h-10 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 text-xs font-bold transition items-center gap-1.5">
                     <i data-lucide="plus" class="w-4 h-4"></i><span>カードを追加</span>
@@ -227,13 +228,13 @@
         </section>
 
         <!-- 新着情報・社内発信 -->
-        <section id="news" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <section id="news" data-sec="news" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-5 sm:p-6 space-y-4">
                 <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
                     <div class="flex items-center gap-2.5">
-                        <span class="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-700"><i data-lucide="bell" class="w-4.5 h-4.5"></i></span>
+                        <span data-sec-icon class="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-700"><i data-lucide="bell" class="w-4.5 h-4.5"></i></span>
                         <div>
-                            <h2 class="text-lg font-bold text-slate-900">新着情報・社内発信（通達・連絡）</h2>
+                            <h2 data-sec-title class="text-lg font-bold text-slate-900">新着情報・社内発信（通達・連絡）</h2>
                             <p class="text-xs text-slate-500 mt-0.5">※確認したらグループLINEでリアクション・返信を徹底！</p>
                         </div>
                     </div>
@@ -264,11 +265,11 @@
         </section>
 
         <!-- 売価設定表 -->
-        <section id="price" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <section id="price" data-sec="price" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5 font-bold text-base">
-                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/15 text-amber-400"><i data-lucide="table" class="w-4.5 h-4.5"></i></span>
-                    <span id="priceTitle">株式会社STR 売価設定表（社外秘・2026/08/24作成）</span>
+                    <span data-sec-icon class="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/15 text-amber-400"><i data-lucide="table" class="w-4.5 h-4.5"></i></span>
+                    <span id="priceTitle" data-sec-title>株式会社STR 売価設定表（社外秘・2026/08/24作成）</span>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <div id="priceToolLinks" class="flex flex-wrap items-center gap-2"></div>
@@ -301,11 +302,11 @@
         </section>
 
         <!-- 外部ツール・リンク集 -->
-        <section id="links" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <section id="links" data-sec="links" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5 font-bold text-base">
-                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-sky-500/15 text-sky-400"><i data-lucide="link" class="w-4.5 h-4.5"></i></span>
-                    <span>外部ツール・リンク集</span>
+                    <span data-sec-icon class="grid h-9 w-9 place-items-center rounded-xl bg-sky-500/15 text-sky-400"><i data-lucide="link" class="w-4.5 h-4.5"></i></span>
+                    <span data-sec-title>外部ツール・リンク集</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-xs text-sky-400 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 font-bold">査定・学習ツール</span>
@@ -322,11 +323,11 @@
         </section>
 
         <!-- 開店・閉店業務 -->
-        <section id="manual" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <section id="manual" data-sec="manual" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5 font-bold text-base">
-                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500/15 text-emerald-400"><i data-lucide="list-checks" class="w-4.5 h-4.5"></i></span>
-                    <span>催事買取 開店・閉店業務まとめ（チェックリスト）</span>
+                    <span data-sec-icon class="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500/15 text-emerald-400"><i data-lucide="list-checks" class="w-4.5 h-4.5"></i></span>
+                    <span data-sec-title>催事買取 開店・閉店業務まとめ（チェックリスト）</span>
                 </div>
                 <span class="text-xs text-emerald-400 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 font-bold">現場必須フロー</span>
             </div>
@@ -352,11 +353,11 @@
         </section>
 
         <!-- 交通費・経費申請 -->
-        <section id="expense" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 space-y-5">
+        <section id="expense" data-sec="expense" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 space-y-5">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <div class="flex items-center gap-2.5">
-                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-blue-100 text-blue-700"><i data-lucide="receipt" class="w-4.5 h-4.5"></i></span>
-                    <h2 class="text-lg font-bold text-slate-900">交通費・経費申請のご案内</h2>
+                    <span data-sec-icon class="grid h-9 w-9 place-items-center rounded-xl bg-blue-100 text-blue-700"><i data-lucide="receipt" class="w-4.5 h-4.5"></i></span>
+                    <h2 data-sec-title class="text-lg font-bold text-slate-900">交通費・経費申請のご案内</h2>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <a href="https://id.jobcan.jp/users/sign_in?app_key=atd" target="_blank" rel="noopener noreferrer"
@@ -485,7 +486,14 @@ const ICONS = {
   train:  svg('<rect x="5" y="3.5" width="14" height="13" rx="3"/><path d="M5 10h14"/><path d="M9 20l1.5-3.5M15 20l-1.5-3.5"/><path d="M6.5 20h11"/>'),
   cart:   svg('<circle cx="9.5" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/><path d="M3 4h2.2l2.3 11.2h11.2L21 7H6"/>'),
   users:  svg('<circle cx="9" cy="8.5" r="3.4"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.6a3.4 3.4 0 0 1 0 6.6"/><path d="M17.5 20a5.6 5.6 0 0 0-1.6-3.9"/>'),
-  shield: svg('<path d="M12 3l7 2.8v5.4c0 4.4-2.9 8.2-7 9.8-4.1-1.6-7-5.4-7-9.8V5.8z"/><path d="M9 12l2.2 2.2L15.5 10"/>')
+  shield: svg('<path d="M12 3l7 2.8v5.4c0 4.4-2.9 8.2-7 9.8-4.1-1.6-7-5.4-7-9.8V5.8z"/><path d="M9 12l2.2 2.2L15.5 10"/>'),
+  zap:    svg('<path d="M13.2 2.5L5 13.2h5.6l-1 8.3L18 10.4h-5.6z"/>'),
+  bell:   svg('<path d="M6.2 9.2a5.8 5.8 0 0 1 11.6 0c0 4.6 1.8 5.8 1.8 5.8H4.4s1.8-1.2 1.8-5.8"/><path d="M10.3 19.5a2 2 0 0 0 3.4 0"/>'),
+  table:  svg('<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M9.8 9.5v10"/>'),
+  link:   svg('<path d="M9.6 14.4l4.8-4.8"/><path d="M7.4 10.6L6 12a3.6 3.6 0 0 0 5.1 5.1l1.4-1.4"/><path d="M16.6 13.4L18 12a3.6 3.6 0 0 0-5.1-5.1l-1.4 1.4"/>'),
+  list:   svg('<path d="M3.5 6.6l1.9 1.9 3-3"/><path d="M3.5 12.6l1.9 1.9 3-3"/><path d="M3.5 18.6l1.9 1.9 3-3"/><path d="M11.2 7.2h9.3M11.2 13.2h9.3M11.2 19.2h9.3"/>'),
+  receipt:svg('<path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9.2 8.4h5.6M9.2 12.4h5.6"/>'),
+  layout: svg('<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.8 4.5v15"/>')
 };
 
 /* ---------- 初期データ ---------- */
@@ -630,7 +638,22 @@ const DEFAULTS = {
     { id: 't-antique', title: 'アンティーリンク 買取相場', desc: 'アンティーク・骨董などの買取相場を確認できます。', icon: 'vase', color: 'emerald', url: 'https://sayaka-creator.github.io/---/', badge: '買取相場' },
     { id: 't-learn', title: '商品知識学習サイト', desc: '商品知識を学べる学習サイト（作成予定）。URLが決まったら、このカードを編集して設定してください。', icon: 'file', color: 'indigo', url: '', badge: '準備中' }
   ],
-  toolNotes: { title: 'リンク集の使い方', items: ['「商品知識学習サイト」は今後作成予定です。URLが決まったら管理者モードでこのカードを編集し、URLを入力してください。', '管理者モードで「リンクを追加」から外部サイトを自由に追加・編集・削除できます。', 'URLが未設定のリンクは「準備中」と表示され、ボタンは押せません。'] }
+  toolNotes: { title: 'リンク集の使い方', items: ['「商品知識学習サイト」は今後作成予定です。URLが決まったら管理者モードでこのカードを編集し、URLを入力してください。', '管理者モードで「リンクを追加」から外部サイトを自由に追加・編集・削除できます。', 'URLが未設定のリンクは「準備中」と表示され、ボタンは押せません。'] },
+  sections: [
+    { key: 'quick',   title: '勤怠・連絡ルール', icon: 'zap', hidden: false },
+    { key: 'news',    title: '新着情報・社内発信（通達・連絡）', icon: 'bell', hidden: false },
+    { key: 'price',   title: '株式会社STR 売価設定表（社外秘・2026/08/24作成）', icon: 'table', hidden: false },
+    { key: 'links',   title: '外部ツール・リンク集', icon: 'link', hidden: false },
+    { key: 'manual',  title: '催事買取 開店・閉店業務まとめ（チェックリスト）', icon: 'list', hidden: false },
+    { key: 'expense', title: '交通費・経費申請のご案内', icon: 'receipt', hidden: false }
+  ],
+  sectionOrder: ['quick', 'news', 'price', 'links', 'manual', 'c-shikake', 'expense'],
+  customSections: [
+    { id: 'c-shikake', title: '買取後の品物の仕分け方', icon: 'box', color: 'teal', hidden: false, blocks: [
+      { id: 'b-shikake-1', title: '仕分けの基本ルール', body: '（ここに仕分けの基本ルールを入力してください）', bullets: ['（例）買取した品物はその日のうちに仕分ける', '（例）カテゴリーごとに袋・箱を分ける'] },
+      { id: 'b-shikake-2', title: '仕分け先・置き場所', body: '（ここに仕分け先や置き場所、持ち帰りルールを入力してください）', bullets: ['（例）高額品（貴金属・ブランド・時計）は必ず持ち帰る'] }
+    ] }
+  ]
 };
 
 /* ---------- 状態 ---------- */
@@ -831,6 +854,14 @@ function migrate(saved) {
   ['meta', 'quickRules', 'price', 'manual', 'expense'].forEach(k => { if (!out[k] || typeof out[k] !== 'object') out[k] = clone(DEFAULTS[k]); });
   if (!Array.isArray(out.tools)) out.tools = clone(DEFAULTS.tools);
   if (!out.toolNotes) out.toolNotes = clone(DEFAULTS.toolNotes);
+  if (!Array.isArray(out.sections)) out.sections = clone(DEFAULTS.sections);
+  else DEFAULTS.sections.forEach(d => { if (!out.sections.some(s => s.key === d.key)) out.sections.push(clone(d)); });
+  if (!Array.isArray(out.customSections)) out.customSections = clone(DEFAULTS.customSections);
+  out.customSections.forEach(c => { if (!Array.isArray(c.blocks)) c.blocks = []; });
+  if (!Array.isArray(out.sectionOrder)) out.sectionOrder = clone(DEFAULTS.sectionOrder);
+  const allKeys = out.sections.map(s => s.key).concat(out.customSections.map(c => c.id));
+  out.sectionOrder = out.sectionOrder.filter(k => allKeys.indexOf(k) >= 0);
+  allKeys.forEach(k => { if (out.sectionOrder.indexOf(k) < 0) out.sectionOrder.push(k); });
   if (!Array.isArray(out.price.groups)) out.price.groups = clone(DEFAULTS.price.groups);
   if (!out.price.notes) out.price.notes = clone(DEFAULTS.price.notes);
   if (!out.meta.archiveDays) out.meta.archiveDays = DEFAULTS.meta.archiveDays || 14;
@@ -932,17 +963,20 @@ function toggleAdminMode() {
 }
 
 /* ---------- ナビ ---------- */
-const NAV = [
-  { id: 'quick', label: '勤怠・連絡', icon: 'zap' },
-  { id: 'news', label: '新着情報', icon: 'bell' },
-  { id: 'price', label: '売価設定表', icon: 'table' },
-  { id: 'links', label: 'リンク集', icon: 'link' },
-  { id: 'manual', label: '開店・閉店', icon: 'list-checks' },
-  { id: 'expense', label: '経費申請', icon: 'receipt' }
-];
+let NAV = [];
+function navItems() {
+  return (D.sectionOrder || []).map(key => {
+    const m = (D.sections || []).find(s => s.key === key);
+    if (m) return { id: key, label: m.title, icon: m.icon, hidden: !!m.hidden };
+    const c = (D.customSections || []).find(x => x.id === key);
+    if (c) return { id: c.id, label: c.title, icon: c.icon, hidden: !!c.hidden };
+    return null;
+  }).filter(Boolean);
+}
 function renderNav() {
+  NAV = navItems().filter(n => !n.hidden);
   $('#sectionNav').innerHTML = NAV.map(n =>
-    '<li><a href="#' + n.id + '" data-nav="' + n.id + '" class="nav-link inline-flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2 rounded-full bg-slate-100 text-slate-600 hover:bg-amber-100 hover:text-amber-800 transition"><i data-lucide="' + n.icon + '" class="w-3.5 h-3.5"></i>' + n.label + '</a></li>'
+    '<li><a href="#' + n.id + '" data-nav="' + n.id + '" class="nav-link inline-flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2 rounded-full bg-slate-100 text-slate-600 hover:bg-amber-100 hover:text-amber-800 transition"><span class="w-3.5 h-3.5">' + (ICONS[n.icon] || ICONS.box) + '</span>' + esc(n.label) + '</a></li>'
   ).join('');
 }
 
@@ -1387,6 +1421,10 @@ function renderAll() {
   renderTools();
   renderManual();
   renderExpense();
+  applySections();
+  renderCustomSections();
+  renderNav();
+  renderSectionManager();
   const li = $('#lastSyncInfo'); if (li) li.textContent = fmtLastSync();
   updateUndoBtn();
   lucide.createIcons();
@@ -1414,6 +1452,7 @@ function resetChecks() {
 
 /* ---------- スクロール ---------- */
 function highlightNav() {
+  if (!NAV.length) return;
   const pos = window.scrollY + 220;
   let cur = NAV[0].id;
   NAV.forEach(n => { const el = document.getElementById(n.id); if (el && el.offsetTop <= pos) cur = n.id; });
@@ -1588,6 +1627,180 @@ function openItemEditor(itemId, subId) {
     }
   });
 }
+/* ---------- セクション管理（大セクションの追加・編集・並び替え） ---------- */
+function sectionAll() {
+  const out = [];
+  (D.sectionOrder || []).forEach(key => {
+    const m = (D.sections || []).find(s => s.key === key);
+    if (m) { out.push({ key: m.key, title: m.title, icon: m.icon, hidden: !!m.hidden, custom: false }); return; }
+    const c = (D.customSections || []).find(x => x.id === key);
+    if (c) out.push({ key: c.id, title: c.title, icon: c.icon, hidden: !!c.hidden, custom: true });
+  });
+  return out;
+}
+function applySections() {
+  const main = document.querySelector('main');
+  if (!main) return;
+  // カスタムセクションのDOMを生成（既存なら中身を保持）
+  (D.customSections || []).forEach(cs => {
+    let el = main.querySelector(':scope > section[data-sec="' + cs.id + '"]');
+    if (!el) {
+      el = document.createElement('section');
+      el.dataset.sec = cs.id;
+      el.className = 'scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden';
+      el.innerHTML = '<div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">'
+        + '<div class="flex items-center gap-2.5 font-bold text-base">'
+        + '<span data-sec-icon class="grid h-9 w-9 place-items-center rounded-xl"></span>'
+        + '<span data-sec-title></span></div>'
+        + '<div class="flex items-center gap-2"><span class="text-xs text-slate-300 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 font-bold">自由セクション</span>'
+        + '<button type="button" data-act="add-block" data-id="' + esc(cs.id) + '" class="admin-only hidden h-9 px-3 rounded-lg bg-amber-500 text-slate-900 text-xs font-black transition items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i>項目を追加</button>'
+        + '<button type="button" data-act="edit-csec" data-id="' + esc(cs.id) + '" class="admin-only hidden h-9 px-3 rounded-lg bg-slate-800 border border-slate-600 text-slate-200 text-xs font-bold transition items-center gap-1.5"><i data-lucide="pencil" class="w-3.5 h-3.5"></i>セクション編集</button>'
+        + '</div></div>'
+        + '<div class="p-5 sm:p-6 space-y-5"><div data-custom-body></div></div>';
+      main.appendChild(el);
+    }
+    const col = pal(cs.color);
+    const ic = el.querySelector('[data-sec-icon]');
+    if (ic) { ic.style.background = col.bg; ic.style.color = col.fg; ic.innerHTML = ICONS[cs.icon] || ICONS.box; }
+    const t = el.querySelector('[data-sec-title]'); if (t) t.textContent = cs.title;
+  });
+  // 削除済みセクションのDOMを除去
+  Array.from(main.querySelectorAll(':scope > section[data-sec]')).forEach(el => {
+    const k = el.dataset.sec;
+    if (!(D.sections || []).some(s => s.key === k) && !(D.customSections || []).some(c => c.id === k)) el.remove();
+  });
+  // 表示・タイトル・アイコン（組み込みセクション）
+  (D.sections || []).forEach(m => {
+    const el = main.querySelector(':scope > section[data-sec="' + m.key + '"]');
+    if (!el) return;
+    el.classList.toggle('hidden', !!m.hidden);
+    const t = el.querySelector('[data-sec-title]'); if (t) t.textContent = m.title;
+    const ic = el.querySelector('[data-sec-icon]'); if (ic) ic.innerHTML = ICONS[m.icon] || ICONS.box;
+  });
+  (D.customSections || []).forEach(cs => {
+    const el = main.querySelector(':scope > section[data-sec="' + cs.id + '"]');
+    if (el) el.classList.toggle('hidden', !!cs.hidden);
+  });
+  // 並び替え
+  (D.sectionOrder || []).forEach(key => {
+    const el = main.querySelector(':scope > section[data-sec="' + key + '"]');
+    if (el) main.appendChild(el);
+  });
+  // 管理者用の投稿パネルは新着情報セクションの直前に固定
+  const ap = document.getElementById('adminPanel');
+  const newsEl = main.querySelector(':scope > section[data-sec="news"]');
+  if (ap && newsEl && !newsEl.classList.contains('hidden')) main.insertBefore(ap, newsEl);
+}
+function renderCustomSections() {
+  (D.customSections || []).forEach(cs => {
+    const el = document.querySelector('main > section[data-sec="' + cs.id + '"]');
+    if (!el) return;
+    const body = el.querySelector('[data-custom-body]');
+    if (!body) return;
+    body.innerHTML = (cs.blocks || []).map(b =>
+      '<div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-2.5" data-block="' + esc(b.id) + '">'
+      + '<div class="flex items-start justify-between gap-3">'
+      + '<h3 class="font-bold text-slate-900 text-base leading-snug">' + esc(b.title) + '</h3>'
+      + adminBtns('edit-block', b.id, cs.id) + '</div>'
+      + (b.body ? '<p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">' + esc(b.body) + '</p>' : '')
+      + ((b.bullets && b.bullets.length) ? '<ul class="space-y-2 text-sm text-slate-700 leading-relaxed">' + b.bullets.map(x => '<li class="flex items-start gap-2"><span class="shrink-0 text-slate-400">・</span><span>' + esc(x) + '</span></li>').join('') + '</ul>' : '')
+      + '</div>').join('')
+      + (admin ? '<div>' + addBtn('項目を追加', 'add-block', cs.id) + '</div>' : '');
+  });
+}
+function renderSectionManager() {
+  const box = $('#sectionManager'); if (!box) return;
+  if (!admin) { box.innerHTML = ''; return; }
+  const list = sectionAll();
+  box.innerHTML = '<div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700 pb-3">'
+    + '<div class="flex items-center gap-2 text-amber-400 font-black text-sm"><span class="w-4 h-4">' + ICONS.layout + '</span><span>セクションの管理（追加・編集・並び替え）</span></div>'
+    + '<button type="button" data-act="add-csec" class="h-9 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-black transition inline-flex items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i>セクションを追加</button></div>'
+    + '<div class="space-y-2">' + list.map((s, i) =>
+        '<div class="flex flex-wrap items-center gap-2 bg-slate-900/60 rounded-xl p-2.5">'
+        + '<span class="text-xs font-black text-slate-500 w-5 text-center tabular-nums">' + (i + 1) + '</span>'
+        + '<span class="w-5 h-5 text-amber-400 shrink-0">' + (ICONS[s.icon] || ICONS.box) + '</span>'
+        + '<span class="flex-1 min-w-[7rem] text-sm font-bold ' + (s.hidden ? 'text-slate-500 line-through' : 'text-white') + '">' + esc(s.title) + (s.custom ? ' <span class="text-[10px] text-sky-400 font-bold">自由</span>' : '') + '</span>'
+        + '<button type="button" data-act="sec-up" data-id="' + esc(s.key) + '" class="h-9 w-9 grid place-items-center rounded-lg bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 transition" title="上へ"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>'
+        + '<button type="button" data-act="sec-down" data-id="' + esc(s.key) + '" class="h-9 w-9 grid place-items-center rounded-lg bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 transition" title="下へ"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>'
+        + '<button type="button" data-act="edit-sec" data-id="' + esc(s.key) + '" class="h-9 px-3 rounded-lg bg-white text-slate-900 text-xs font-black hover:bg-slate-100 transition">編集</button>'
+        + '<button type="button" data-act="sec-hide" data-id="' + esc(s.key) + '" class="h-9 px-3 rounded-lg bg-slate-800 border border-slate-700 text-xs font-bold ' + (s.hidden ? 'text-emerald-400' : 'text-slate-300') + ' hover:bg-slate-700 transition">' + (s.hidden ? '表示する' : '非表示') + '</button>'
+        + (s.custom ? '<button type="button" data-act="del-csec" data-id="' + esc(s.key) + '" class="h-9 px-3 rounded-lg bg-slate-800 border border-rose-500/40 text-rose-400 text-xs font-bold hover:bg-rose-500/10 transition">削除</button>' : '')
+        + '</div>').join('') + '</div>'
+    + '<p class="text-[11px] text-slate-400 leading-relaxed">※「編集」で名前とアイコンを変更できます。並び替えはページ内の表示順と上部ナビに反映されます。自由セクションは中身の項目も自由に追加・編集・削除できます。</p>';
+}
+function moveSection(key, dir) {
+  const o = D.sectionOrder || (D.sectionOrder = []);
+  const i = o.indexOf(key); if (i < 0) return;
+  const j = dir < 0 ? i - 1 : i + 1;
+  if (j < 0 || j >= o.length) return;
+  o[i] = o[j]; o[j] = key;
+  save(); renderAll(); lucide.createIcons();
+}
+function toggleSectionHidden(key) {
+  const m = (D.sections || []).find(s => s.key === key);
+  if (m) m.hidden = !m.hidden;
+  else { const c = (D.customSections || []).find(x => x.id === key); if (c) c.hidden = !c.hidden; }
+  save(); renderAll(); lucide.createIcons();
+  showToast('セクションの表示を切り替えました');
+}
+function openSectionEditor(key) {
+  const m = (D.sections || []).find(s => s.key === key);
+  const c = m ? null : (D.customSections || []).find(x => x.id === key);
+  if (!m && !c) return;
+  openEditor({
+    title: 'セクションを編集', desc: 'セクションの名前とアイコンを変更できます。',
+    fields: [
+      { name: 'title', label: 'セクション名', value: m ? m.title : c.title, required: true },
+      iconSelect(m ? m.icon : c.icon)
+    ],
+    onSubmit: fd => {
+      if (m) { m.title = fd.get('title').trim(); m.icon = fd.get('icon'); }
+      else { c.title = fd.get('title').trim(); c.icon = fd.get('icon'); }
+      save(); closeEditor(); renderAll(); lucide.createIcons(); showToast('セクションを更新しました');
+    }
+  });
+}
+function openCustomSectionEditor(id) {
+  const c = id ? (D.customSections || []).find(x => x.id === id) : null;
+  openEditor({
+    title: c ? 'セクションを編集' : 'セクションを追加', desc: 'ページ内に新しい大セクションを作成します。',
+    fields: [
+      { name: 'title', label: 'セクション名', value: c ? c.title : '', required: true, placeholder: '例：買取後の品物の仕分け方' },
+      iconSelect(c ? c.icon : 'box'), colorSelect(c ? c.color : 'teal')
+    ],
+    onSubmit: fd => {
+      const rec = { id: c ? c.id : uid('c-'), title: fd.get('title').trim(), icon: fd.get('icon'), color: fd.get('color'), hidden: c ? !!c.hidden : false, blocks: c ? c.blocks : [] };
+      if (c) Object.assign(c, rec); else { D.customSections.push(rec); D.sectionOrder.push(rec.id); }
+      save(); closeEditor(); renderAll(); lucide.createIcons();
+      showToast(c ? 'セクションを更新しました' : 'セクションを追加しました。中身の項目を追加してください');
+    }
+  });
+}
+function deleteCustomSection(id) {
+  const c = (D.customSections || []).find(x => x.id === id); if (!c) return;
+  if (!confirm('セクション「' + c.title + '」を削除しますか？（中の項目もすべて削除されます）')) return;
+  D.customSections = D.customSections.filter(x => x.id !== id);
+  D.sectionOrder = (D.sectionOrder || []).filter(k => k !== id);
+  save(); renderAll(); lucide.createIcons(); showToast('削除しました');
+}
+function openCustomBlockEditor(sectionId, blockId) {
+  const cs = (D.customSections || []).find(x => x.id === sectionId); if (!cs) return;
+  const b = blockId ? cs.blocks.find(x => x.id === blockId) : null;
+  openEditor({
+    title: b ? '項目を編集' : '項目を追加', desc: '「' + cs.title + '」の中に表示されます。',
+    fields: [
+      { name: 'title', label: '見出し', value: b ? b.title : '', required: true, placeholder: '例：仕分けの基本ルール' },
+      { name: 'body', label: '本文（任意）', type: 'textarea', rows: 4, value: b ? (b.body || '') : '', placeholder: '説明文を入力（改行できます）' },
+      { name: 'bullets', label: '箇条書き（1行に1項目）', type: 'textarea', rows: 4, value: b ? (b.bullets || []).join('\n') : '', placeholder: '例：その日のうちに仕分ける' }
+    ],
+    onSubmit: fd => {
+      const rec = { id: b ? b.id : uid('b-'), title: fd.get('title').trim(), body: fd.get('body').trim(), bullets: fd.get('bullets').split('\n').map(s => s.trim()).filter(Boolean) };
+      if (b) Object.assign(b, rec); else cs.blocks.push(rec);
+      save(); closeEditor(); renderAll(); lucide.createIcons(); showToast(b ? '更新しました' : '追加しました');
+    }
+  });
+}
+
 function openStepEditor(kind, id) {
   const block = D.manual[kind];
   const st = id ? findStep(kind, id) : null;
@@ -1683,7 +1896,7 @@ function delCategory(i) {
 function removeAt(kind, id, extra) {
   const names = {
     'quick': 'このカード', 'post': 'この投稿', 'group': 'この大カテゴリー', 'sub': 'この小カテゴリー',
-    'item': 'この品目', 'step': 'この業務', 'exp': 'この項目', 'tool': 'このリンク'
+    'item': 'この品目', 'step': 'この業務', 'exp': 'この項目', 'tool': 'このリンク', 'block': 'この項目'
   };
   if (!confirm((names[kind] || 'この項目') + 'を削除しますか？')) return;
   if (kind === 'quick') D.quickCards = D.quickCards.filter(x => x.id !== id);
@@ -1694,6 +1907,7 @@ function removeAt(kind, id, extra) {
   if (kind === 'step') { D.manual[extra].steps = D.manual[extra].steps.filter(x => x.id !== id); delete checks[id]; saveChecks(); }
   if (kind === 'exp') D.expense.cards = D.expense.cards.filter(x => x.id !== id);
   if (kind === 'tool') D.tools = (D.tools || []).filter(x => x.id !== id);
+  if (kind === 'block') { const cs = (D.customSections || []).find(x => x.id === extra); if (cs) cs.blocks = cs.blocks.filter(x => x.id !== id); }
   save(); renderAll(); showToast('削除しました');
 }
 
@@ -1716,7 +1930,10 @@ document.addEventListener('click', e => {
     'arch-expand': () => setAllArch(true), 'arch-collapse': () => setAllArch(false),
     'add-tool': () => openToolEditor(null), 'edit-tool': () => openToolEditor(id), 'del-tool': () => removeAt('tool', id),
     'edit-tool-notes': () => openNotesEditor('tool'),
-    'sync-save': saveSyncSettings, 'sync-test': testSync, 'sync-push': () => pushShared(false), 'sync-pull': () => pullShared(false)
+    'sync-save': saveSyncSettings, 'sync-test': testSync, 'sync-push': () => pushShared(false), 'sync-pull': () => pullShared(false),
+    'add-csec': () => openCustomSectionEditor(null), 'edit-csec': () => openCustomSectionEditor(id), 'del-csec': () => deleteCustomSection(id),
+    'edit-sec': () => openSectionEditor(id), 'sec-up': () => moveSection(id, -1), 'sec-down': () => moveSection(id, 1), 'sec-hide': () => toggleSectionHidden(id),
+    'add-block': () => openCustomBlockEditor(id, null), 'edit-block': () => openCustomBlockEditor(extra, id), 'del-block': () => removeAt('block', id, extra)
   };
   if (map[act]) { e.preventDefault(); map[act](); }
 });
