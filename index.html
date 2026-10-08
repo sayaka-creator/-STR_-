@@ -170,6 +170,23 @@
             <div id="quickRules"></div>
         </section>
 
+        <!-- 組織図 -->
+        <section id="org" data-sec="org" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 font-bold text-base">
+                    <span data-sec-icon class="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/15 text-amber-400"><i data-lucide="users" class="w-4.5 h-4.5"></i></span>
+                    <span data-sec-title>組織図</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-amber-400 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 font-bold">兼任・空席あり</span>
+                    <button data-act="add-orgdept" class="admin-only hidden h-9 px-3 rounded-lg bg-amber-500 text-slate-900 text-xs font-black transition items-center gap-1.5">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>部署を追加</span>
+                    </button>
+                </div>
+            </div>
+            <div class="p-5 sm:p-6"><div id="orgBody" class="space-y-5"></div></div>
+        </section>
+
         <!-- 管理者用：新規お知らせ投稿パネル（初期は非表示） -->
         <section id="adminPanel" class="hidden bg-slate-900 text-white rounded-2xl shadow-lg border border-amber-500/50 p-5 sm:p-6 space-y-5">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
@@ -506,7 +523,9 @@ const ICONS = {
   magnet: svg('<path d="M6 4v7a6 6 0 0 0 12 0V4"/><path d="M6 8h4M14 8h4"/>'),
   ticket: svg('<path d="M4 9.5V7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v2a2.5 2.5 0 0 0 0 5v2A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.5v-2a2.5 2.5 0 0 0 0-5z"/>'),
   trash:  svg('<path d="M5 7h14"/><path d="M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7"/><path d="M7 7l.9 12A1.5 1.5 0 0 0 9.4 20.5h5.2A1.5 1.5 0 0 0 16 19l.9-12"/>'),
-  scissors:svg('<circle cx="6.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/><path d="M8.6 8.4L20 19"/><path d="M8.6 15.6L20 5"/>')
+  scissors:svg('<circle cx="6.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/><path d="M8.6 8.4L20 19"/><path d="M8.6 15.6L20 5"/>'),
+  building:svg('<path d="M4 21V5.5A1.5 1.5 0 0 1 5.5 4h7A1.5 1.5 0 0 1 14 5.5V21"/><path d="M14 10h4.5A1.5 1.5 0 0 1 20 11.5V21"/><path d="M3 21h18"/><path d="M7 8h2M7 12h2M7 16h2M16.5 14h1M16.5 17.5h1"/>'),
+  map:    svg('<path d="M9 4.5L3.5 6.5v13L9 17.5l6 2 5.5-2v-13l-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>')
 };
 
 /* ---------- 初期データ ---------- */
@@ -654,13 +673,54 @@ const DEFAULTS = {
   toolNotes: { title: 'リンク集の使い方', items: ['「商品知識学習サイト」は今後作成予定です。URLが決まったら管理者モードでこのカードを編集し、URLを入力してください。', '管理者モードで「リンクを追加」から外部サイトを自由に追加・編集・削除できます。', 'URLが未設定のリンクは「準備中」と表示され、ボタンは押せません。'] },
   sections: [
     { key: 'quick',   title: '勤怠・連絡ルール', icon: 'zap', hidden: false },
+    { key: 'org',     title: '組織図', icon: 'users', hidden: false },
     { key: 'news',    title: '新着情報・社内発信（通達・連絡）', icon: 'bell', hidden: false },
     { key: 'price',   title: '株式会社STR 売価設定表（社外秘・2026/08/24作成）', icon: 'table', hidden: false },
     { key: 'links',   title: '外部ツール・リンク集', icon: 'link', hidden: false },
     { key: 'manual',  title: '催事買取 開店・閉店業務まとめ（チェックリスト）', icon: 'list', hidden: false },
     { key: 'expense', title: '交通費・経費申請のご案内', icon: 'receipt', hidden: false }
   ],
-  sectionOrder: ['quick', 'news', 'price', 'links', 'manual', 'c-shikake', 'expense'],
+  sectionOrder: ['quick', 'org', 'news', 'price', 'links', 'manual', 'c-shikake', 'expense'],
+  org: {
+    intro: 'ベンチャー企業のため、複数の部署・役職を兼任しているメンバーも多くいます。名前の横の「兼任」バッジは自動表示です。点線の枠は「空席・募集中」のポジションです。',
+    departments: [
+      { id: 'o-jimusho', name: '事務所', icon: 'building', color: 'indigo', note: '', roles: [
+        { id: 'r-j1', title: '代表', note: '', vacant: false, members: [{ id: 'm-1', name: '伊地知 司', note: '' }] },
+        { id: 'r-j2', title: '役員・所属メンバー', note: '', vacant: false, members: [
+          { id: 'm-2', name: '近藤 亮', note: '' }, { id: 'm-3', name: '村上 香葉', note: '' }] },
+        { id: 'r-j3', title: '人事労務', note: '', vacant: false, members: [{ id: 'm-4', name: '輪嶋 茜里', note: '' }] },
+        { id: 'r-j4', title: '人事教育', note: '', vacant: false, members: [
+          { id: 'm-5', name: '小林 誠徳', note: '' }, { id: 'm-6', name: '清野 瑞貴', note: '' },
+          { id: 'm-7', name: '井塚 瑞樹', note: '' }, { id: 'm-8', name: '佐々木 涼', note: '' }] },
+        { id: 'r-j5', title: 'その他ポジション', note: '役職・部署を追加できます', vacant: true, members: [] }
+      ] },
+      { id: 'o-fukuoka', name: '福岡支部', icon: 'map', color: 'emerald', note: '', roles: [
+        { id: 'r-f1', title: '該当メンバー', note: '', vacant: false, members: [
+          { id: 'm-9', name: '小林 誠徳', note: '' }, { id: 'm-10', name: '小林 つばさ', note: '' },
+          { id: 'm-11', name: '丸山 大宙', note: '' }, { id: 'm-12', name: '和田 見尋志', note: '' },
+          { id: 'm-13', name: '月足 真也', note: '' }, { id: 'm-14', name: '岩村 多聞', note: '' },
+          { id: 'm-15', name: '相馬 勇喜', note: '' }] },
+        { id: 'r-f2', title: '責任者・サブ', note: '役職を追加できます', vacant: true, members: [] }
+      ] },
+      { id: 'o-tokai', name: '東海エリア', icon: 'map', color: 'amber', note: '', roles: [
+        { id: 'r-t1', title: 'メイン', note: '', vacant: false, members: [
+          { id: 'm-16', name: '清野 瑞貴', note: '' }, { id: 'm-17', name: '井塚 瑞樹', note: '' },
+          { id: 'm-18', name: '平野 憲吾', note: '' }] },
+        { id: 'r-t2', title: '静岡メイン①', note: '', vacant: false, members: [{ id: 'm-19', name: '木村 元胤', note: '' }] },
+        { id: 'r-t3', title: '静岡メイン②', note: '', vacant: false, members: [{ id: 'm-20', name: '小林 史弥', note: '' }] },
+        { id: 'r-t4', title: '静岡サブ②', note: '', vacant: false, members: [{ id: 'm-21', name: '名倉 聡', note: '' }] },
+        { id: 'r-t5', title: '四国メイン', note: '', vacant: false, members: [{ id: 'm-22', name: '松田 知樹', note: '' }] },
+        { id: 'r-t6', title: '四国サブ', note: '', vacant: false, members: [{ id: 'm-23', name: '佐護 祥之', note: '' }] },
+        { id: 'r-t7', title: '担当メンバー', note: '', vacant: false, members: [
+          { id: 'm-24', name: '清野 永理奈', note: '' }, { id: 'm-25', name: '清水 研吾', note: '' },
+          { id: 'm-26', name: '宜野座 裕斗', note: '' }, { id: 'm-27', name: '三浦 右京', note: '' },
+          { id: 'm-28', name: '矢沢 紘睦', note: '' }, { id: 'm-29', name: '前田 祥汰', note: '' },
+          { id: 'm-30', name: '和田 見尋志', note: '' }, { id: 'm-31', name: '岩村 多聞', note: '' },
+          { id: 'm-32', name: '相馬 勇喜', note: '' }, { id: 'm-33', name: '豊実 賢真', note: '' },
+          { id: 'm-34', name: '斎藤 英一', note: '' }] }
+      ] }
+    ]
+  },
   customSections: [
     { id: 'c-shikake', title: '買取後の品物の仕分け方', icon: 'box', color: 'teal', hidden: false,
       desc: '社内での催事買取や店舗回収における、商材ごとの正しい仕分け・処理ルールをまとめています。作業前に必ずご確認ください。',
@@ -787,7 +847,24 @@ function b64decUtf8(b64) {
   return new TextDecoder().decode(bytes);
 }
 function ghHeaders(cfg) {
-  return { 'Authorization': 'Bearer ' + cfg.token, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  return { 'Authorization': 'Bearer ' + String(cfg.token || '').trim(), 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+}
+/* GitHub API のエラーを分かりやすく案内する */
+function ghErr(status) {
+  if (status === 401) return 'HTTP 401：トークンが無効です（期限切れ／コピーミス／GitHubによる自動失効のいずれか）。新しいトークンを作り直して貼り直してください';
+  if (status === 403) return 'HTTP 403：権限が足りません（トークンの「Contents」を Read and write にしてください）';
+  if (status === 404) return 'HTTP 404：リポジトリ名・ブランチ・ファイル名が違うか、トークンの対象リポジトリに「-STR_-」が含まれていません';
+  if (status === 409) return 'HTTP 409：競合しました。10秒ほど待って、もう一度保存してください';
+  if (status === 422) return 'HTTP 422：保存内容が拒否されました（ファイル名やブランチ名を確認してください）';
+  return 'HTTP ' + status;
+}
+/* トークンの形式チェック（コピーミスを目視で発見できるように） */
+function tokenShape(t) {
+  const s = String(t == null ? '' : t).trim();
+  if (!s) return { ok: false, msg: 'トークンが空です' };
+  if (/^github_pat_/.test(s)) return { ok: true, msg: '形式OK（きめ細かいトークン・長さ' + s.length + '）' };
+  if (/^ghp_/.test(s)) return { ok: true, msg: '形式OK（クラシックトークン・長さ' + s.length + '）' };
+  return { ok: false, msg: '⚠ 形式が不正です（github_pat_ または ghp_ で始まる必要があります／現在の長さ ' + s.length + '）' };
 }
 async function fetchShared(url) {
   const u = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now();
@@ -801,15 +878,16 @@ async function ghSave(cfg, jsonStr) {
   let sha = null;
   const g = await fetch(api + '?ref=' + encodeURIComponent(cfg.branch), { headers: headers, cache: 'no-store' });
   if (g.ok) { sha = (await g.json()).sha; }
-  else if (g.status !== 404) { throw new Error('取得失敗 HTTP ' + g.status); }
+  else if (g.status !== 404) { throw new Error(ghErr(g.status)); }
   const body = { message: 'portal data update ' + new Date().toISOString(), content: b64encUtf8(jsonStr), branch: cfg.branch };
   if (sha) body.sha = sha;
   const p = await fetch(api, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers), body: JSON.stringify(body) });
-  if (!p.ok) { const t = await p.text(); throw new Error('保存失敗 HTTP ' + p.status + ' ' + t.slice(0, 160)); }
+  if (!p.ok) { const t = await p.text(); throw new Error(ghErr(p.status) + '｜' + t.slice(0, 120)); }
   return await p.json();
 }
 function setSyncStatus(t) { const e = $('#syncStatus'); if (e) e.textContent = t; }
 async function pullShared(silent) {
+  saveSyncSettings(true);
   const url = (syncCfg.readUrl || SYNC_READ_URL || '').trim();
   if (!url) { if (!silent) showToast('読み込みURLが未設定です'); return false; }
   try {
@@ -831,6 +909,7 @@ async function pullShared(silent) {
   }
 }
 async function pushShared(silent) {
+  saveSyncSettings(true); // 入力欄の内容を先に取り込む（保存ボタンを押し忘れても反映されるように）
   if (!syncCfg.owner || !syncCfg.repo || !syncCfg.token) {
     if (!silent) { showToast('クラウド同期が未設定です。下の欄を入力して「設定を保存」してください'); const d = $('#syncPanel details'); if (d) d.open = true; }
     return false;
@@ -854,34 +933,46 @@ function scheduleAutoSave() {
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(() => { pushShared(true); }, 4000);
 }
-function saveSyncSettings() {
+function saveSyncSettings(silent) {
   const g = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
   const c = document.getElementById('syncAuto');
-  syncCfg.readUrl = g('syncReadUrl') || SYNC_READ_URL;
-  syncCfg.owner = g('syncOwner');
-  syncCfg.repo = g('syncRepo');
-  syncCfg.branch = g('syncBranch') || 'main';
-  syncCfg.path = g('syncPath') || 'str-portal-data.json';
-  syncCfg.token = g('syncToken');
-  syncCfg.autoSave = c ? !!c.checked : true;
+  const cur = id => { const e = document.getElementById(id); return e ? true : false; };
+  syncCfg.readUrl = cur('syncReadUrl') ? g('syncReadUrl') : (syncCfg.readUrl || SYNC_READ_URL);
+  syncCfg.owner = cur('syncOwner') ? g('syncOwner') : syncCfg.owner;
+  syncCfg.repo = cur('syncRepo') ? g('syncRepo') : syncCfg.repo;
+  syncCfg.branch = (cur('syncBranch') ? g('syncBranch') : syncCfg.branch) || 'main';
+  syncCfg.path = (cur('syncPath') ? g('syncPath') : syncCfg.path) || 'str-portal-data.json';
+  syncCfg.token = cur('syncToken') ? g('syncToken') : syncCfg.token;
+  syncCfg.autoSave = c ? !!c.checked : syncCfg.autoSave;
   saveSyncCfg();
-  showToast('同期設定を保存しました');
+  if (!silent) showToast('同期設定を保存しました');
 }
 async function testSync() {
   saveSyncSettings();
   setSyncStatus('テスト中…');
   try {
-    if (!syncCfg.owner || !syncCfg.repo || !syncCfg.token) throw new Error('オーナー／リポジトリ／トークンを入力してください');
+    const shape = tokenShape(syncCfg.token);
+    if (!shape.ok) throw new Error(shape.msg);
+    if (!syncCfg.owner || !syncCfg.repo) throw new Error('オーナー名とリポジトリ名を入力してください');
+    const u = await fetch('https://api.github.com/user', { headers: ghHeaders(syncCfg), cache: 'no-store' });
+    if (!u.ok) throw new Error(ghErr(u.status));
+    const who = await u.json();
     const r = await fetch('https://api.github.com/repos/' + encodeURIComponent(syncCfg.owner) + '/' + encodeURIComponent(syncCfg.repo), { headers: ghHeaders(syncCfg), cache: 'no-store' });
-    if (!r.ok) throw new Error('HTTP ' + r.status + '（トークン権限を確認）');
+    if (!r.ok) throw new Error(ghErr(r.status));
     const j = await r.json();
     const w = j.permissions && j.permissions.push ? '書き込み可' : '書き込み権限なし';
-    setSyncStatus('接続OK：' + j.full_name + '（' + w + '）');
-    showToast('GitHub接続に成功しました（' + w + '）');
+    setSyncStatus('接続OK：' + who.login + ' → ' + j.full_name + '（' + w + '）');
+    showToast('GitHub接続に成功しました（' + who.login + '／' + w + '）');
   } catch (e) {
     setSyncStatus('接続失敗: ' + e.message);
     showToast('接続テスト失敗: ' + e.message);
   }
+}
+function clearSyncToken() {
+  syncCfg.token = ''; saveSyncCfg();
+  const b = $('#syncPanel'); if (b) delete b.dataset.rendered;
+  renderSyncPanel(); lucide.createIcons();
+  showToast('トークンを消去しました。新しいトークンを貼り直してください');
 }
 function fmtLastSync() {
   return syncCfg.lastSync
@@ -910,15 +1001,16 @@ function renderSyncPanel() {
     + '<div><label class="' + L + '">ブランチ</label><input id="syncBranch" class="' + F + '" value="' + esc(syncCfg.branch || 'main') + '" placeholder="main"></div>'
     + '<div><label class="' + L + '">保存ファイル名</label><input id="syncPath" class="' + F + '" value="' + esc(syncCfg.path || 'str-portal-data.json') + '" placeholder="str-portal-data.json"></div>'
     + '</div>'
-    + '<div><label class="' + L + '">アクセストークン（GitHub Fine-grained PAT ／ Contents: Read and write）</label><input id="syncToken" type="password" class="' + F + '" value="' + esc(syncCfg.token) + '" placeholder="github_pat_…"></div>'
+    + '<div><label class="' + L + '">アクセストークン（GitHub Fine-grained PAT ／ Contents: Read and write）</label><input id="syncToken" type="password" class="' + F + '" value="' + esc(syncCfg.token) + '" placeholder="github_pat_…"><p id="tokenHint" class="mt-1.5 text-[11px] font-bold ' + (tokenShape(syncCfg.token).ok ? 'text-emerald-400' : 'text-slate-400') + '">' + esc(tokenShape(syncCfg.token).msg) + '</p></div>'
     + '<label class="flex items-center gap-2 text-slate-300 font-bold"><input id="syncAuto" type="checkbox" class="w-4 h-4 rounded border-slate-600"' + (syncCfg.autoSave ? ' checked' : '') + '>変更を自動でクラウド保存する（数秒後に反映）</label>'
     + '<div class="flex flex-wrap gap-2 pt-1">'
     + '<button type="button" data-act="sync-save" class="h-10 px-3.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 font-black transition">設定を保存</button>'
     + '<button type="button" data-act="sync-test" class="h-10 px-3.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-bold transition">接続テスト</button>'
     + '<button type="button" data-act="sync-push" class="h-10 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition">クラウドへ保存</button>'
     + '<button type="button" data-act="sync-pull" class="h-10 px-3.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-bold transition">クラウドから読み込む</button>'
+    + '<button type="button" data-act="sync-cleartoken" class="h-10 px-3.5 rounded-lg bg-slate-800 border border-rose-500/40 text-rose-300 font-bold transition">トークンを消去</button>'
     + '</div>'
-    + '<p class="text-[11px] text-slate-400 leading-relaxed">※ 保存後、GitHub Pages の再ビルドで全端末に反映されるまで約1分かかります。<br>※ トークンを用意しない場合は、JSONエクスポートしたファイルを GitHub 上で <code class="text-amber-300">' + esc(syncCfg.path || 'str-portal-data.json') + '</code> としてアップロード（コミット）しても全端末に共有できます。</p>'
+    + '<p class="text-[11px] text-slate-400 leading-relaxed">※ 「クラウドへ保存」「クラウドから読み込む」を押すと、入力欄の内容は自動で取り込まれます（「設定を保存」の押し忘れ防止）。<br>※ 保存後、GitHub Pages の再ビルドで全端末に反映されるまで約1分かかります。<br>※ トークンを用意しない場合は、JSONエクスポートしたファイルを GitHub 上で <code class="text-amber-300">' + esc(syncCfg.path || 'str-portal-data.json') + '</code> としてアップロード（コミット）しても全端末に共有できます。</p>'
     + '</div></details>';
 }
 
@@ -939,6 +1031,19 @@ function migrate(saved) {
   ['meta', 'quickRules', 'price', 'manual', 'expense'].forEach(k => { if (!out[k] || typeof out[k] !== 'object') out[k] = clone(DEFAULTS[k]); });
   if (!Array.isArray(out.tools)) out.tools = clone(DEFAULTS.tools);
   if (!out.toolNotes) out.toolNotes = clone(DEFAULTS.toolNotes);
+  if (!out.org || typeof out.org !== 'object') out.org = clone(DEFAULTS.org);
+  if (!Array.isArray(out.org.departments)) out.org.departments = clone(DEFAULTS.org.departments);
+  if (out.org.intro === undefined) out.org.intro = DEFAULTS.org.intro;
+  out.org.departments.forEach(d => {
+    if (!Array.isArray(d.roles)) d.roles = [];
+    if (d.note === undefined) d.note = '';
+    d.roles.forEach(r => {
+      if (!Array.isArray(r.members)) r.members = [];
+      if (r.note === undefined) r.note = '';
+      if (r.vacant === undefined) r.vacant = false;
+      r.members.forEach(m => { if (m.note === undefined) m.note = ''; });
+    });
+  });
   if (!Array.isArray(out.sections)) out.sections = clone(DEFAULTS.sections);
   else DEFAULTS.sections.forEach(d => { if (!out.sections.some(s => s.key === d.key)) out.sections.push(clone(d)); });
   if (!Array.isArray(out.customSections)) out.customSections = clone(DEFAULTS.customSections);
@@ -951,7 +1056,15 @@ function migrate(saved) {
   if (!Array.isArray(out.sectionOrder)) out.sectionOrder = clone(DEFAULTS.sectionOrder);
   const allKeys = out.sections.map(s => s.key).concat(out.customSections.map(c => c.id));
   out.sectionOrder = out.sectionOrder.filter(k => allKeys.indexOf(k) >= 0);
-  allKeys.forEach(k => { if (out.sectionOrder.indexOf(k) < 0) out.sectionOrder.push(k); });
+  allKeys.forEach(k => {
+    if (out.sectionOrder.indexOf(k) >= 0) return;
+    const di = DEFAULTS.sectionOrder.indexOf(k);
+    if (di >= 0) {
+      let anchor = -1;
+      for (let p = di - 1; p >= 0; p--) { const idx = out.sectionOrder.indexOf(DEFAULTS.sectionOrder[p]); if (idx >= 0) { anchor = idx; break; } }
+      out.sectionOrder.splice(anchor + 1, 0, k); // 既定の並び位置に挿入（例：組織図は勤怠の直後）
+    } else out.sectionOrder.push(k);
+  });
   if (!Array.isArray(out.price.groups)) out.price.groups = clone(DEFAULTS.price.groups);
   if (!out.price.notes) out.price.notes = clone(DEFAULTS.price.notes);
   if (!out.meta.archiveDays) out.meta.archiveDays = DEFAULTS.meta.archiveDays || 14;
@@ -1522,6 +1635,7 @@ function renderAll() {
   renderSyncPanel();
   renderQuick();
   renderNews();
+  renderOrg();
   renderPrice();
   renderTools();
   renderManual();
@@ -2009,6 +2123,133 @@ function moveBlock(sectionId, blockId, dir) {
   save(); renderAll(); lucide.createIcons();
 }
 
+/* ---------- 組織図 ---------- */
+function orgConcurrent(depts) {
+  const where = {};
+  (depts || []).forEach(d => (d.roles || []).forEach(r => (r.members || []).forEach(m => {
+    const n = String(m.name || '').trim(); if (!n) return;
+    where[n] = where[n] || [];
+    if (where[n].indexOf(d.name) < 0) where[n].push(d.name);
+  })));
+  return where;
+}
+function orgRoleHtml(d, r, where) {
+  const col = pal(d.color);
+  const vac = !!r.vacant;
+  const members = (r.members || []).filter(m => String(m.name || '').trim());
+  const chips = members.map(m => {
+    const n = String(m.name).trim();
+    const isKen = (where[n] || []).length > 1;
+    return '<span class="inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-full pl-2.5 pr-3 py-1 text-sm font-bold text-slate-800">' + esc(n)
+      + (isKen ? '<span class="text-[10px] font-black text-amber-700 bg-amber-100 border border-amber-200 rounded px-1.5 py-0.5">兼任</span>' : '')
+      + (m.note ? '<span class="text-[10px] font-normal text-slate-500">' + esc(m.note) + '</span>' : '')
+      + '</span>';
+  }).join('');
+  const move = admin
+    ? '<button type="button" data-act="orgrole-up" data-id="' + esc(r.id) + '" data-extra="' + esc(d.id) + '" class="grid h-8 w-8 place-items-center rounded-lg bg-white/80 border border-slate-300 text-slate-600 hover:text-amber-700 transition" title="上へ"><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>'
+      + '<button type="button" data-act="orgrole-down" data-id="' + esc(r.id) + '" data-extra="' + esc(d.id) + '" class="grid h-8 w-8 place-items-center rounded-lg bg-white/80 border border-slate-300 text-slate-600 hover:text-amber-700 transition" title="下へ"><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>'
+    : '';
+  return '<div class="rounded-xl border ' + (vac ? 'border-dashed border-slate-300 bg-slate-100/60' : 'border-slate-200 bg-white') + ' p-3.5 space-y-2.5" data-orgrole="' + esc(r.id) + '">'
+    + '<div class="flex items-start justify-between gap-2">'
+    + '<div class="min-w-0"><p class="font-bold text-sm" style="color:' + (vac ? '#64748b' : col.fg) + '">' + esc(r.title) + '</p>'
+    + (r.note ? '<p class="text-[11px] text-slate-500 leading-relaxed">' + esc(r.note) + '</p>' : '') + '</div>'
+    + '<span class="flex items-center gap-1 shrink-0">' + move + adminBtns('edit-orgrole', r.id, d.id) + '</span></div>'
+    + (vac
+        ? '<p class="text-xs text-slate-500 italic flex items-center gap-1.5"><span class="w-3.5 h-3.5 text-slate-400">' + ICONS.alert + '</span>空席・募集中</p>'
+        : (chips ? '<div class="flex flex-wrap gap-2">' + chips + '</div>' : '<p class="text-xs text-slate-400 italic">メンバー未登録</p>'))
+    + '</div>';
+}
+function renderOrg() {
+  const box = $('#orgBody'); if (!box) return;
+  const o = D.org || {}; const depts = o.departments || [];
+  const where = orgConcurrent(depts);
+  const ken = Object.keys(where).filter(n => where[n].length > 1);
+  const intro = '<p class="text-sm text-slate-600 leading-relaxed">' + esc(o.intro || '') + '</p>';
+  const kenBox = ken.length
+    ? '<div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 space-y-3">'
+      + '<p class="font-bold text-amber-950 text-sm flex items-center gap-2"><span class="w-4 h-4 text-amber-600">' + ICONS.users + '</span>兼任しているメンバー（' + ken.length + '名）</p>'
+      + '<div class="flex flex-wrap gap-2">' + ken.map(n => '<span class="inline-flex items-center gap-1.5 bg-white border border-amber-300 rounded-full pl-2.5 pr-3 py-1 text-xs font-bold text-amber-900">' + esc(n) + '<span class="text-[10px] font-normal text-amber-700">' + esc(where[n].join('・')) + '</span></span>').join('') + '</div>'
+      + '<p class="text-[11px] text-amber-800 leading-relaxed">※ 複数の部署に名前があるメンバーを自動で抽出しています。役職の兼任は各メンバーの備考欄に記入できます。</p></div>'
+    : '';
+  const cards = depts.map(d => {
+    const col = pal(d.color);
+    const roles = (d.roles || []).map(r => orgRoleHtml(d, r, where)).join('');
+    const cnt = (d.roles || []).reduce((n, r) => n + (r.members || []).filter(m => String(m.name || '').trim()).length, 0);
+    const move = admin
+      ? '<button type="button" data-act="orgdept-up" data-id="' + esc(d.id) + '" class="grid h-8 w-8 place-items-center rounded-lg bg-white/80 border border-slate-300 text-slate-600 hover:text-amber-700 transition" title="上へ"><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>'
+        + '<button type="button" data-act="orgdept-down" data-id="' + esc(d.id) + '" class="grid h-8 w-8 place-items-center rounded-lg bg-white/80 border border-slate-300 text-slate-600 hover:text-amber-700 transition" title="下へ"><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>'
+      : '';
+    return '<div class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden" data-orgdept="' + esc(d.id) + '">'
+      + '<div class="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b" style="background:' + col.bg + ';border-color:' + col.bd + '">'
+      + '<div class="flex items-center gap-2.5 min-w-0">'
+      + '<span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl" style="background:#fff;color:' + col.fg + ';border:1px solid ' + col.bd + '">' + (ICONS[d.icon] || ICONS.building) + '</span>'
+      + '<div class="min-w-0"><h3 class="font-bold text-base truncate" style="color:' + col.fg + '">' + esc(d.name) + '</h3>'
+      + (d.note ? '<p class="text-[11px]" style="color:' + col.fg + ';opacity:.75">' + esc(d.note) + '</p>' : '') + '</div></div>'
+      + '<span class="flex items-center gap-2">'
+      + '<span class="text-[11px] font-bold px-2.5 py-1 rounded-md bg-white/80 tabular-nums" style="color:' + col.fg + '">' + cnt + ' 名</span>'
+      + move + adminBtns('edit-orgdept', d.id) + '</span>'
+      + '</div>'
+      + '<div class="p-4 grid gap-3 sm:grid-cols-2">' + (roles || '<p class="text-xs text-slate-400 italic">役職がまだありません</p>') + '</div>'
+      + (admin ? '<div class="px-4 pb-4">' + addBtn('役職を追加', 'add-orgrole', d.id) + '</div>' : '')
+      + '</div>';
+  }).join('');
+  box.innerHTML = intro + kenBox + '<div class="grid gap-4 lg:grid-cols-2">' + (cards || '<p class="text-center text-sm text-slate-500 py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">部署がまだありません。</p>') + '</div>'
+    + (admin ? '<div>' + addBtn('部署を追加', 'add-orgdept') + '</div>' : '');
+}
+function findOrgDept(id) { return (D.org.departments || []).find(d => d.id === id); }
+function openOrgDeptEditor(id) {
+  const d = id ? findOrgDept(id) : null;
+  openEditor({
+    title: d ? '部署を編集' : '部署を追加', desc: '組織図に表示される部署です。',
+    fields: [
+      { name: 'name', label: '部署名', value: d ? d.name : '', required: true, placeholder: '例：事務所 / 福岡支部 / 東海エリア' },
+      { name: 'note', label: '補足（任意）', value: d ? (d.note || '') : '', placeholder: '例：本社機能' },
+      iconSelect(d ? d.icon : 'building'), colorSelect(d ? d.color : 'indigo')
+    ],
+    onSubmit: fd => {
+      const rec = { id: d ? d.id : uid('o-'), name: fd.get('name').trim(), note: fd.get('note').trim(), icon: fd.get('icon'), color: fd.get('color'), roles: d ? d.roles : [] };
+      if (d) Object.assign(d, rec); else D.org.departments.push(rec);
+      save(); closeEditor(); renderAll(); lucide.createIcons(); showToast(d ? '更新しました' : '部署を追加しました');
+    }
+  });
+}
+function openOrgRoleEditor(deptId, roleId) {
+  const d = findOrgDept(deptId); if (!d) return;
+  const r = roleId ? (d.roles || []).find(x => x.id === roleId) : null;
+  openEditor({
+    title: r ? '役職・ポジションを編集' : '役職・ポジションを追加', desc: '「' + d.name + '」の中に表示されます。',
+    fields: [
+      { name: 'title', label: '役職・ポジション名', value: r ? r.title : '', required: true, placeholder: '例：静岡メイン① / 人事教育' },
+      { name: 'status', label: '状態', type: 'select', value: r && r.vacant ? 'vacant' : 'normal',
+        options: [{ value: 'normal', label: '在籍（メンバーを表示）' }, { value: 'vacant', label: '空席・募集中（点線で表示）' }] },
+      { name: 'note', label: '補足（任意）', value: r ? (r.note || '') : '', placeholder: '例：役職を追加できます' },
+      { name: 'members', label: 'メンバー（1行に「氏名|備考」）', type: 'textarea', rows: 6,
+        value: r ? (r.members || []).map(m => m.name + (m.note ? '|' + m.note : '')).join('\n') : '',
+        hint: '備考は任意です（例：山田 太郎|兼任：東海エリア）。空席のときは空欄でOK。' }
+    ],
+    onSubmit: fd => {
+      const members = fd.get('members').split('\n').map(s => s.trim()).filter(Boolean).map(line => {
+        const p = line.split('|');
+        return { id: uid('m-'), name: (p[0] || '').trim(), note: (p[1] || '').trim() };
+      });
+      const rec = { id: r ? r.id : uid('r-'), title: fd.get('title').trim(), note: fd.get('note').trim(), vacant: fd.get('status') === 'vacant', members: members };
+      if (r) Object.assign(r, rec); else d.roles.push(rec);
+      save(); closeEditor(); renderAll(); lucide.createIcons(); showToast(r ? '更新しました' : '追加しました');
+    }
+  });
+}
+function moveOrgDept(id, dir) {
+  const a = D.org.departments; const i = a.findIndex(x => x.id === id); if (i < 0) return;
+  const j = dir < 0 ? i - 1 : i + 1; if (j < 0 || j >= a.length) return;
+  const t = a[i]; a[i] = a[j]; a[j] = t; save(); renderAll(); lucide.createIcons();
+}
+function moveOrgRole(deptId, roleId, dir) {
+  const d = findOrgDept(deptId); if (!d) return;
+  const a = d.roles; const i = a.findIndex(x => x.id === roleId); if (i < 0) return;
+  const j = dir < 0 ? i - 1 : i + 1; if (j < 0 || j >= a.length) return;
+  const t = a[i]; a[i] = a[j]; a[j] = t; save(); renderAll(); lucide.createIcons();
+}
+
 function openStepEditor(kind, id) {
   const block = D.manual[kind];
   const st = id ? findStep(kind, id) : null;
@@ -2104,7 +2345,8 @@ function delCategory(i) {
 function removeAt(kind, id, extra) {
   const names = {
     'quick': 'このカード', 'post': 'この投稿', 'group': 'この大カテゴリー', 'sub': 'この小カテゴリー',
-    'item': 'この品目', 'step': 'この業務', 'exp': 'この項目', 'tool': 'このリンク', 'block': 'この項目'
+    'item': 'この品目', 'step': 'この業務', 'exp': 'この項目', 'tool': 'このリンク', 'block': 'この項目',
+    'orgdept': 'この部署', 'orgrole': 'この役職'
   };
   if (!confirm((names[kind] || 'この項目') + 'を削除しますか？')) return;
   if (kind === 'quick') D.quickCards = D.quickCards.filter(x => x.id !== id);
@@ -2116,6 +2358,8 @@ function removeAt(kind, id, extra) {
   if (kind === 'exp') D.expense.cards = D.expense.cards.filter(x => x.id !== id);
   if (kind === 'tool') D.tools = (D.tools || []).filter(x => x.id !== id);
   if (kind === 'block') { const cs = (D.customSections || []).find(x => x.id === extra); if (cs) cs.blocks = cs.blocks.filter(x => x.id !== id); }
+  if (kind === 'orgdept') D.org.departments = D.org.departments.filter(x => x.id !== id);
+  if (kind === 'orgrole') { const d = findOrgDept(extra); if (d) d.roles = d.roles.filter(x => x.id !== id); }
   save(); renderAll(); showToast('削除しました');
 }
 
@@ -2138,11 +2382,15 @@ document.addEventListener('click', e => {
     'arch-expand': () => setAllArch(true), 'arch-collapse': () => setAllArch(false),
     'add-tool': () => openToolEditor(null), 'edit-tool': () => openToolEditor(id), 'del-tool': () => removeAt('tool', id),
     'edit-tool-notes': () => openNotesEditor('tool'),
-    'sync-save': saveSyncSettings, 'sync-test': testSync, 'sync-push': () => pushShared(false), 'sync-pull': () => pullShared(false),
+    'sync-save': saveSyncSettings, 'sync-test': testSync, 'sync-push': () => pushShared(false), 'sync-pull': () => pullShared(false), 'sync-cleartoken': clearSyncToken,
     'add-csec': () => openCustomSectionEditor(null), 'edit-csec': () => openCustomSectionEditor(id), 'del-csec': () => deleteCustomSection(id),
     'edit-sec': () => openSectionEditor(id), 'sec-up': () => moveSection(id, -1), 'sec-down': () => moveSection(id, 1), 'sec-hide': () => toggleSectionHidden(id),
     'add-block': () => openCustomBlockEditor(id, null), 'edit-block': () => openCustomBlockEditor(extra, id), 'del-block': () => removeAt('block', id, extra),
-    'blk-up': () => moveBlock(extra, id, -1), 'blk-down': () => moveBlock(extra, id, 1)
+    'blk-up': () => moveBlock(extra, id, -1), 'blk-down': () => moveBlock(extra, id, 1),
+    'add-orgdept': () => openOrgDeptEditor(null), 'edit-orgdept': () => openOrgDeptEditor(id), 'del-orgdept': () => removeAt('orgdept', id),
+    'orgdept-up': () => moveOrgDept(id, -1), 'orgdept-down': () => moveOrgDept(id, 1),
+    'add-orgrole': () => openOrgRoleEditor(id, null), 'edit-orgrole': () => openOrgRoleEditor(extra, id), 'del-orgrole': () => removeAt('orgrole', id, extra),
+    'orgrole-up': () => moveOrgRole(extra, id, -1), 'orgrole-down': () => moveOrgRole(extra, id, 1)
   };
   if (map[act]) { e.preventDefault(); map[act](); }
 });
@@ -2223,6 +2471,14 @@ document.addEventListener('change', e => {
     showToast('アーカイブの自動分類を「発信から' + archDays() + '日」に変更しました');
   }
 });
+document.addEventListener('input', e => {
+  if (e.target && e.target.id === 'syncToken') {
+    const h = $('#tokenHint'); if (!h) return;
+    const s = tokenShape(e.target.value);
+    h.textContent = s.msg;
+    h.className = 'mt-1.5 text-[11px] font-bold ' + (s.ok ? 'text-emerald-400' : 'text-slate-400');
+  }
+});
 
 /* ---------- 初期化 ---------- */
 $('#todayDate').textContent = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
@@ -2247,6 +2503,6 @@ renderNav();
 
     </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
