@@ -19,6 +19,18 @@
         details > summary::-webkit-details-marker { display: none; }
         .wrap-any { overflow-wrap: anywhere; word-break: break-word; }
         .price-item { min-width: 0; }
+        /* 組織図ツリー（樹形図） */
+        .orgtree { overflow-x: auto; padding: 6px 6px 10px; }
+        .orgtree ul { position: relative; padding: 18px 0 0; margin: 0; text-align: center; white-space: nowrap; }
+        .orgtree li { position: relative; display: inline-block; list-style: none; padding: 18px 10px 0; text-align: center; vertical-align: top; }
+        .orgtree li::before, .orgtree li::after { content: ''; position: absolute; top: 0; right: 50%; width: 50%; height: 18px; border-top: 2px solid #cbd5e1; }
+        .orgtree li::after { right: auto; left: 50%; border-left: 2px solid #cbd5e1; }
+        .orgtree li:only-child::after, .orgtree li:only-child::before { display: none; }
+        .orgtree li:only-child { padding-top: 0; }
+        .orgtree li:first-child::before, .orgtree li:last-child::after { border: 0 none; }
+        .orgtree li:last-child::before { border-right: 2px solid #cbd5e1; border-radius: 0 6px 0 0; }
+        .orgtree li:first-child::after { border-radius: 6px 0 0 0; }
+        .orgtree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid #cbd5e1; width: 0; height: 18px; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
@@ -178,7 +190,10 @@
                     <span data-sec-title>組織図</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs text-amber-400 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 font-bold">兼任・空席あり</span>
+                    <div class="no-print flex items-center gap-1 bg-slate-800 border border-slate-700 rounded-lg p-1">
+                        <button type="button" data-act="orgview-tree" class="h-7 px-2.5 rounded-md text-[11px] font-bold transition">ツリー</button>
+                        <button type="button" data-act="orgview-card" class="h-7 px-2.5 rounded-md text-[11px] font-bold transition">カード</button>
+                    </div>
                     <button data-act="add-orgdept" class="admin-only hidden h-9 px-3 rounded-lg bg-amber-500 text-slate-900 text-xs font-black transition items-center gap-1.5">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>部署を追加</span>
                     </button>
@@ -682,42 +697,23 @@ const DEFAULTS = {
   ],
   sectionOrder: ['quick', 'org', 'news', 'price', 'links', 'manual', 'c-shikake', 'expense'],
   org: {
-    intro: 'ベンチャー企業のため、複数の部署・役職を兼任しているメンバーも多くいます。名前の横の「兼任」バッジは自動表示です。点線の枠は「空席・募集中」のポジションです。',
+    v: 2,
+    root: '株式会社STR',
+    intro: '',
     departments: [
       { id: 'o-jimusho', name: '事務所', icon: 'building', color: 'indigo', note: '', roles: [
-        { id: 'r-j1', title: '代表', note: '', vacant: false, members: [{ id: 'm-1', name: '伊地知 司', note: '' }] },
-        { id: 'r-j2', title: '役員・所属メンバー', note: '', vacant: false, members: [
-          { id: 'm-2', name: '近藤 亮', note: '' }, { id: 'm-3', name: '村上 香葉', note: '' }] },
-        { id: 'r-j3', title: '人事労務', note: '', vacant: false, members: [{ id: 'm-4', name: '輪嶋 茜里', note: '' }] },
-        { id: 'r-j4', title: '人事教育', note: '', vacant: false, members: [
-          { id: 'm-5', name: '小林 誠徳', note: '' }, { id: 'm-6', name: '清野 瑞貴', note: '' },
-          { id: 'm-7', name: '井塚 瑞樹', note: '' }, { id: 'm-8', name: '佐々木 涼', note: '' }] },
-        { id: 'r-j5', title: 'その他ポジション', note: '役職・部署を追加できます', vacant: true, members: [] }
+        { id: 'r-j1', title: '代表', note: '', vacant: false, members: [] },
+        { id: 'r-j2', title: '役員', note: '', vacant: false, members: [] },
+        { id: 'r-j3', title: '人事労務', note: '', vacant: false, members: [] },
+        { id: 'r-j4', title: '人事教育', note: '', vacant: false, members: [] }
       ] },
       { id: 'o-fukuoka', name: '福岡支部', icon: 'map', color: 'emerald', note: '', roles: [
-        { id: 'r-f1', title: '該当メンバー', note: '', vacant: false, members: [
-          { id: 'm-9', name: '小林 誠徳', note: '' }, { id: 'm-10', name: '小林 つばさ', note: '' },
-          { id: 'm-11', name: '丸山 大宙', note: '' }, { id: 'm-12', name: '和田 見尋志', note: '' },
-          { id: 'm-13', name: '月足 真也', note: '' }, { id: 'm-14', name: '岩村 多聞', note: '' },
-          { id: 'm-15', name: '相馬 勇喜', note: '' }] },
-        { id: 'r-f2', title: '責任者・サブ', note: '役職を追加できます', vacant: true, members: [] }
+        { id: 'r-f1', title: 'メイン', note: '', vacant: false, members: [] },
+        { id: 'r-f2', title: 'サブ', note: '', vacant: false, members: [] }
       ] },
       { id: 'o-tokai', name: '東海エリア', icon: 'map', color: 'amber', note: '', roles: [
-        { id: 'r-t1', title: 'メイン', note: '', vacant: false, members: [
-          { id: 'm-16', name: '清野 瑞貴', note: '' }, { id: 'm-17', name: '井塚 瑞樹', note: '' },
-          { id: 'm-18', name: '平野 憲吾', note: '' }] },
-        { id: 'r-t2', title: '静岡メイン①', note: '', vacant: false, members: [{ id: 'm-19', name: '木村 元胤', note: '' }] },
-        { id: 'r-t3', title: '静岡メイン②', note: '', vacant: false, members: [{ id: 'm-20', name: '小林 史弥', note: '' }] },
-        { id: 'r-t4', title: '静岡サブ②', note: '', vacant: false, members: [{ id: 'm-21', name: '名倉 聡', note: '' }] },
-        { id: 'r-t5', title: '四国メイン', note: '', vacant: false, members: [{ id: 'm-22', name: '松田 知樹', note: '' }] },
-        { id: 'r-t6', title: '四国サブ', note: '', vacant: false, members: [{ id: 'm-23', name: '佐護 祥之', note: '' }] },
-        { id: 'r-t7', title: '担当メンバー', note: '', vacant: false, members: [
-          { id: 'm-24', name: '清野 永理奈', note: '' }, { id: 'm-25', name: '清水 研吾', note: '' },
-          { id: 'm-26', name: '宜野座 裕斗', note: '' }, { id: 'm-27', name: '三浦 右京', note: '' },
-          { id: 'm-28', name: '矢沢 紘睦', note: '' }, { id: 'm-29', name: '前田 祥汰', note: '' },
-          { id: 'm-30', name: '和田 見尋志', note: '' }, { id: 'm-31', name: '岩村 多聞', note: '' },
-          { id: 'm-32', name: '相馬 勇喜', note: '' }, { id: 'm-33', name: '豊実 賢真', note: '' },
-          { id: 'm-34', name: '斎藤 英一', note: '' }] }
+        { id: 'r-t1', title: 'メイン', note: '', vacant: false, members: [] },
+        { id: 'r-t2', title: 'サブ', note: '', vacant: false, members: [] }
       ] }
     ]
   },
@@ -1032,6 +1028,7 @@ function migrate(saved) {
   if (!Array.isArray(out.tools)) out.tools = clone(DEFAULTS.tools);
   if (!out.toolNotes) out.toolNotes = clone(DEFAULTS.toolNotes);
   if (!out.org || typeof out.org !== 'object') out.org = clone(DEFAULTS.org);
+  if (Number(out.org.v || 0) < 2) out.org = clone(DEFAULTS.org); // 組織図をツリー対応の空テンプレートへ更新
   if (!Array.isArray(out.org.departments)) out.org.departments = clone(DEFAULTS.org.departments);
   if (out.org.intro === undefined) out.org.intro = DEFAULTS.org.intro;
   out.org.departments.forEach(d => {
@@ -2159,12 +2156,12 @@ function orgRoleHtml(d, r, where) {
         : (chips ? '<div class="flex flex-wrap gap-2">' + chips + '</div>' : '<p class="text-xs text-slate-400 italic">メンバー未登録</p>'))
     + '</div>';
 }
-function renderOrg() {
+function renderOrgCards() {
   const box = $('#orgBody'); if (!box) return;
   const o = D.org || {}; const depts = o.departments || [];
   const where = orgConcurrent(depts);
   const ken = Object.keys(where).filter(n => where[n].length > 1);
-  const intro = '<p class="text-sm text-slate-600 leading-relaxed">' + esc(o.intro || '') + '</p>';
+  const intro = o.intro ? '<p class="text-sm text-slate-600 leading-relaxed">' + esc(o.intro) + '</p>' : '';
   const kenBox = ken.length
     ? '<div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 space-y-3">'
       + '<p class="font-bold text-amber-950 text-sm flex items-center gap-2"><span class="w-4 h-4 text-amber-600">' + ICONS.users + '</span>兼任しているメンバー（' + ken.length + '名）</p>'
@@ -2195,6 +2192,91 @@ function renderOrg() {
   }).join('');
   box.innerHTML = intro + kenBox + '<div class="grid gap-4 lg:grid-cols-2">' + (cards || '<p class="text-center text-sm text-slate-500 py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">部署がまだありません。</p>') + '</div>'
     + (admin ? '<div>' + addBtn('部署を追加', 'add-orgdept') + '</div>' : '');
+}
+/* ---------- 組織図（ツリー表示） ---------- */
+let orgView = 'tree';
+function orgMemberChips(members, where) {
+  const list = (members || []).filter(m => String(m.name || '').trim());
+  if (!list.length) return '<span class="text-[10px] text-slate-400 italic">メンバー未入力</span>';
+  return list.map(m => {
+    const n = String(m.name).trim();
+    const isKen = (where[n] || []).length > 1;
+    return '<span class="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-full pl-2 pr-2.5 py-0.5 text-[11px] font-bold text-slate-800">' + esc(n)
+      + (isKen ? '<span class="text-[9px] font-black text-amber-700 bg-amber-100 border border-amber-200 rounded px-1">兼任</span>' : '')
+      + (m.note ? '<span class="text-[9px] font-normal text-slate-500">' + esc(m.note) + '</span>' : '')
+      + '</span>';
+  }).join('');
+}
+function orgRootNode(o) {
+  return '<div class="inline-flex items-center gap-2 bg-slate-900 text-white rounded-xl px-5 py-3 font-black text-sm shadow-sm">'
+    + '<span class="w-4 h-4 text-amber-400">' + ICONS.building + '</span>' + esc(o.root || '会社名')
+    + (admin ? '<button type="button" data-act="edit-orgroot" class="grid h-7 w-7 place-items-center rounded-lg bg-white/10 border border-white/20 text-white/80 hover:text-amber-400 transition" title="会社名を編集"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>' : '')
+    + '</div>';
+}
+function orgDeptNode(d) {
+  const col = pal(d.color);
+  const cnt = (d.roles || []).reduce((n, r) => n + (r.members || []).filter(m => String(m.name || '').trim()).length, 0);
+  const move = admin
+    ? '<button type="button" data-act="orgdept-up" data-id="' + esc(d.id) + '" class="grid h-7 w-7 place-items-center rounded-md bg-white/80 border border-slate-300 text-slate-600 hover:text-amber-700 transition" title="上へ"><i data-lucide="chevron-up" class="w-3 h-3"></i></button>'
+      + '<button type="button" data-act="orgdept-down" data-id="' + esc(d.id) + '" class="grid h-7 w-7 place-items-center rounded-md bg-white/80 border border-slate-300 text-slate-600 hover:text-amber-700 transition" title="下へ"><i data-lucide="chevron-down" class="w-3 h-3"></i></button>'
+    : '';
+  return '<div class="inline-block rounded-xl border px-4 py-3 shadow-sm align-top" style="background:' + col.bg + ';border-color:' + col.bd + '">'
+    + '<div class="flex items-center justify-center gap-2">'
+    + '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style="background:#fff;color:' + col.fg + ';border:1px solid ' + col.bd + '">' + (ICONS[d.icon] || ICONS.building) + '</span>'
+    + '<span class="font-bold text-sm whitespace-nowrap" style="color:' + col.fg + '">' + esc(d.name) + '</span>'
+    + '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/80 tabular-nums" style="color:' + col.fg + '">' + cnt + '</span>'
+    + '</div>'
+    + (d.note ? '<p class="text-[10px] mt-1" style="color:' + col.fg + ';opacity:.75">' + esc(d.note) + '</p>' : '')
+    + (admin ? '<div class="flex items-center justify-center gap-1 mt-2">' + move + adminBtns('edit-orgdept', d.id) + '</div>' : '')
+    + '</div>';
+}
+function orgRoleNode(d, r, where) {
+  const vac = !!r.vacant;
+  const move = admin
+    ? '<button type="button" data-act="orgrole-up" data-id="' + esc(r.id) + '" data-extra="' + esc(d.id) + '" class="grid h-7 w-7 place-items-center rounded-md bg-white/80 border border-slate-300 text-slate-600 hover:text-amber-700 transition" title="上へ"><i data-lucide="chevron-up" class="w-3 h-3"></i></button>'
+      + '<button type="button" data-act="orgrole-down" data-id="' + esc(r.id) + '" data-extra="' + esc(d.id) + '" class="grid h-7 w-7 place-items-center rounded-md bg-white/80 border border-slate-300 text-slate-600 hover:text-amber-700 transition" title="下へ"><i data-lucide="chevron-down" class="w-3 h-3"></i></button>'
+    : '';
+  return '<div class="inline-block rounded-xl border px-3.5 py-2.5 shadow-sm align-top text-left ' + (vac ? 'border-dashed border-slate-300 bg-slate-100/70' : 'border-slate-200 bg-white') + '">'
+    + '<div class="flex items-center justify-between gap-2">'
+    + '<span class="font-bold text-xs whitespace-nowrap ' + (vac ? 'text-slate-500' : 'text-slate-900') + '">' + esc(r.title) + '</span>'
+    + (vac ? '<span class="text-[9px] font-bold text-slate-500 border border-slate-300 rounded px-1 shrink-0">空席</span>' : '')
+    + '</div>'
+    + '<div class="flex flex-wrap gap-1 mt-1.5 max-w-[15rem] whitespace-normal">' + orgMemberChips(r.members, where) + '</div>'
+    + (admin ? '<div class="flex items-center justify-end gap-1 mt-1.5">' + move + adminBtns('edit-orgrole', r.id, d.id) + '</div>' : '')
+    + '</div>';
+}
+function renderOrg() {
+  const box = $('#orgBody'); if (!box) return;
+  const o = D.org || {}; const depts = o.departments || [];
+  const where = orgConcurrent(depts);
+  const ken = Object.keys(where).filter(n => where[n].length > 1);
+  const kenBox = ken.length
+    ? '<div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 space-y-3 mb-4">'
+      + '<p class="font-bold text-amber-950 text-sm flex items-center gap-2"><span class="w-4 h-4 text-amber-600">' + ICONS.users + '</span>兼任しているメンバー（' + ken.length + '名）</p>'
+      + '<div class="flex flex-wrap gap-2">' + ken.map(n => '<span class="inline-flex items-center gap-1.5 bg-white border border-amber-300 rounded-full pl-2.5 pr-3 py-1 text-xs font-bold text-amber-900">' + esc(n) + '<span class="text-[10px] font-normal text-amber-700">' + esc(where[n].join('・')) + '</span></span>').join('') + '</div></div>'
+    : '';
+  // 表示切替の見た目
+  [['orgview-tree', 'tree'], ['orgview-card', 'card']].forEach(function(p) {
+    const b = document.querySelector('[data-act="' + p[0] + '"]'); if (!b) return;
+    const on = orgView === p[1];
+    b.style.background = on ? '#f59e0b' : 'transparent';
+    b.style.color = on ? '#0f172a' : '#cbd5e1';
+  });
+  if (orgView === 'card') { renderOrgCards(); const kb = $('#orgBody'); if (kb && kenBox) kb.insertAdjacentHTML('afterbegin', kenBox); return; }
+  const deptLis = depts.map(d => {
+    const roleLis = (d.roles || []).map(r => '<li>' + orgRoleNode(d, r, where) + '</li>').join('');
+    return '<li>' + orgDeptNode(d) + (roleLis ? '<ul>' + roleLis + '</ul>' : '') + '</li>';
+  }).join('');
+  const tree = '<div class="orgtree"><ul><li>' + orgRootNode(o) + (deptLis ? '<ul>' + deptLis + '</ul>' : '') + '</li></ul></div>';
+  const empty = depts.length ? '' : '<p class="text-center text-sm text-slate-500 py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">部署がまだありません。「＋部署を追加」から作成してください。</p>';
+  box.innerHTML = kenBox + (depts.length ? tree : empty) + (admin ? '<div class="flex justify-center mt-3">' + addBtn('部署を追加', 'add-orgdept') + '</div>' : '');
+}
+function openOrgRootEditor() {
+  openEditor({
+    title: '会社名（組織図の一番上）を編集', desc: '樹形図の最上部に表示されます。',
+    fields: [{ name: 'root', label: '会社名・組織名', value: (D.org && D.org.root) || '', required: true, placeholder: '例：株式会社STR' }],
+    onSubmit: fd => { D.org.root = fd.get('root').trim(); save(); closeEditor(); renderAll(); lucide.createIcons(); showToast('更新しました'); }
+  });
 }
 function findOrgDept(id) { return (D.org.departments || []).find(d => d.id === id); }
 function openOrgDeptEditor(id) {
@@ -2390,7 +2472,10 @@ document.addEventListener('click', e => {
     'add-orgdept': () => openOrgDeptEditor(null), 'edit-orgdept': () => openOrgDeptEditor(id), 'del-orgdept': () => removeAt('orgdept', id),
     'orgdept-up': () => moveOrgDept(id, -1), 'orgdept-down': () => moveOrgDept(id, 1),
     'add-orgrole': () => openOrgRoleEditor(id, null), 'edit-orgrole': () => openOrgRoleEditor(extra, id), 'del-orgrole': () => removeAt('orgrole', id, extra),
-    'orgrole-up': () => moveOrgRole(extra, id, -1), 'orgrole-down': () => moveOrgRole(extra, id, 1)
+    'orgrole-up': () => moveOrgRole(extra, id, -1), 'orgrole-down': () => moveOrgRole(extra, id, 1),
+    'edit-orgroot': () => openOrgRootEditor(),
+    'orgview-tree': () => { orgView = 'tree'; renderOrg(); lucide.createIcons(); },
+    'orgview-card': () => { orgView = 'card'; renderOrg(); lucide.createIcons(); }
   };
   if (map[act]) { e.preventDefault(); map[act](); }
 });
