@@ -697,21 +697,22 @@ const DEFAULTS = {
   ],
   sectionOrder: ['quick', 'org', 'news', 'price', 'links', 'manual', 'c-shikake', 'expense'],
   org: {
-    v: 2,
+    v: 3,
     root: '株式会社STR',
     intro: '',
     departments: [
-      { id: 'o-jimusho', name: '事務所', icon: 'building', color: 'indigo', note: '', roles: [
+      { id: 'o-jimusho', name: '事務所', parent: '', icon: 'building', color: 'indigo', note: '', roles: [
         { id: 'r-j1', title: '代表', note: '', vacant: false, members: [] },
         { id: 'r-j2', title: '役員', note: '', vacant: false, members: [] },
         { id: 'r-j3', title: '人事労務', note: '', vacant: false, members: [] },
         { id: 'r-j4', title: '人事教育', note: '', vacant: false, members: [] }
       ] },
-      { id: 'o-fukuoka', name: '福岡支部', icon: 'map', color: 'emerald', note: '', roles: [
+      { id: 'o-eigyo', name: '営業部', parent: '', icon: 'users', color: 'sky', note: '', roles: [] },
+      { id: 'o-fukuoka', name: '福岡支部', parent: 'o-eigyo', icon: 'map', color: 'emerald', note: '', roles: [
         { id: 'r-f1', title: 'メイン', note: '', vacant: false, members: [] },
         { id: 'r-f2', title: 'サブ', note: '', vacant: false, members: [] }
       ] },
-      { id: 'o-tokai', name: '東海エリア', icon: 'map', color: 'amber', note: '', roles: [
+      { id: 'o-tokai', name: '東海エリア', parent: 'o-eigyo', icon: 'map', color: 'amber', note: '', roles: [
         { id: 'r-t1', title: 'メイン', note: '', vacant: false, members: [] },
         { id: 'r-t2', title: 'サブ', note: '', vacant: false, members: [] }
       ] }
@@ -1030,6 +1031,19 @@ function migrate(saved) {
   if (!out.org || typeof out.org !== 'object') out.org = clone(DEFAULTS.org);
   if (Number(out.org.v || 0) < 2) out.org = clone(DEFAULTS.org); // 組織図をツリー対応の空テンプレートへ更新
   if (!Array.isArray(out.org.departments)) out.org.departments = clone(DEFAULTS.org.departments);
+  if (Number(out.org.v || 0) < 3) {
+    // 営業部を追加し、各エリアをその下へ移動（既存の入力内容は保持）
+    if (!out.org.departments.some(d => d.id === 'o-eigyo' || d.name === '営業部')) {
+      const src = (DEFAULTS.org.departments || []).find(d => d.id === 'o-eigyo');
+      if (src) out.org.departments.push(clone(src));
+    }
+    ['o-fukuoka', 'o-tokai'].forEach(id => {
+      const d = out.org.departments.find(x => x.id === id);
+      if (d && !d.parent) d.parent = 'o-eigyo';
+    });
+    out.org.v = 3;
+  }
+  out.org.departments.forEach(d => { if (d.parent === undefined) d.parent = ''; });
   if (out.org.intro === undefined) out.org.intro = DEFAULTS.org.intro;
   out.org.departments.forEach(d => {
     if (!Array.isArray(d.roles)) d.roles = [];
@@ -2263,10 +2277,19 @@ function renderOrg() {
     b.style.color = on ? '#0f172a' : '#cbd5e1';
   });
   if (orgView === 'card') { renderOrgCards(); const kb = $('#orgBody'); if (kb && kenBox) kb.insertAdjacentHTML('afterbegin', kenBox); return; }
-  const deptLis = depts.map(d => {
+  // 親子関係を組み立てて多階層の樹形図を描画（営業部 → 各エリア など）
+  const byParent = {};
+  depts.forEach(d => {
+    const p = (d.parent && depts.some(x => x.id === d.parent)) ? d.parent : '';
+    (byParent[p] = byParent[p] || []).push(d);
+  });
+  const build = d => {
     const roleLis = (d.roles || []).map(r => '<li>' + orgRoleNode(d, r, where) + '</li>').join('');
-    return '<li>' + orgDeptNode(d) + (roleLis ? '<ul>' + roleLis + '</ul>' : '') + '</li>';
-  }).join('');
+    const kidLis = (byParent[d.id] || []).map(k => '<li>' + build(k) + '</li>').join('');
+    const inner = roleLis + kidLis;
+    return orgDeptNode(d) + (inner ? '<ul>' + inner + '</ul>' : '');
+  };
+  const deptLis = (byParent[''] || []).map(d => '<li>' + build(d) + '</li>').join('');
   const tree = '<div class="orgtree"><ul><li>' + orgRootNode(o) + (deptLis ? '<ul>' + deptLis + '</ul>' : '') + '</li></ul></div>';
   const empty = depts.length ? '' : '<p class="text-center text-sm text-slate-500 py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">部署がまだありません。「＋部署を追加」から作成してください。</p>';
   box.innerHTML = kenBox + (depts.length ? tree : empty) + (admin ? '<div class="flex justify-center mt-3">' + addBtn('部署を追加', 'add-orgdept') + '</div>' : '');
@@ -2279,17 +2302,31 @@ function openOrgRootEditor() {
   });
 }
 function findOrgDept(id) { return (D.org.departments || []).find(d => d.id === id); }
+function orgDescendants(id) {
+  const out = [];
+  const walk = pid => (D.org.departments || []).forEach(d => { if (d.parent === pid) { out.push(d.id); walk(d.id); } });
+  walk(id);
+  return out;
+}
+function orgParentOptions(selfId) {
+  const opts = [{ value: '', label: 'なし（最上位に表示）' }];
+  const banned = selfId ? orgDescendants(selfId).concat([selfId]) : [];
+  (D.org.departments || []).forEach(d => { if (banned.indexOf(d.id) < 0) opts.push({ value: d.id, label: d.name }); });
+  return opts;
+}
 function openOrgDeptEditor(id) {
   const d = id ? findOrgDept(id) : null;
   openEditor({
     title: d ? '部署を編集' : '部署を追加', desc: '組織図に表示される部署です。',
     fields: [
-      { name: 'name', label: '部署名', value: d ? d.name : '', required: true, placeholder: '例：事務所 / 福岡支部 / 東海エリア' },
+      { name: 'name', label: '部署名', value: d ? d.name : '', required: true, placeholder: '例：事務所 / 営業部 / 福岡支部 / 東海エリア' },
+      { type: 'select', name: 'parent', label: '親部署（任意）', value: d ? (d.parent || '') : '', options: orgParentOptions(id),
+        hint: '「営業部」を選ぶと、その部署の下にぶら下がって表示されます。' },
       { name: 'note', label: '補足（任意）', value: d ? (d.note || '') : '', placeholder: '例：本社機能' },
       iconSelect(d ? d.icon : 'building'), colorSelect(d ? d.color : 'indigo')
     ],
     onSubmit: fd => {
-      const rec = { id: d ? d.id : uid('o-'), name: fd.get('name').trim(), note: fd.get('note').trim(), icon: fd.get('icon'), color: fd.get('color'), roles: d ? d.roles : [] };
+      const rec = { id: d ? d.id : uid('o-'), name: fd.get('name').trim(), parent: fd.get('parent') || '', note: fd.get('note').trim(), icon: fd.get('icon'), color: fd.get('color'), roles: d ? d.roles : [] };
       if (d) Object.assign(d, rec); else D.org.departments.push(rec);
       save(); closeEditor(); renderAll(); lucide.createIcons(); showToast(d ? '更新しました' : '部署を追加しました');
     }
