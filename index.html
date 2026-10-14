@@ -1031,7 +1031,7 @@ function migrate(saved) {
   if (!out.org || typeof out.org !== 'object') out.org = clone(DEFAULTS.org);
   if (Number(out.org.v || 0) < 2) out.org = clone(DEFAULTS.org); // 組織図をツリー対応の空テンプレートへ更新
   if (!Array.isArray(out.org.departments)) out.org.departments = clone(DEFAULTS.org.departments);
-  if (Number(out.org.v || 0) < 3) {
+    if (Number(out.org.v || 0) < 3) {
     // 営業部を追加し、各エリアをその下へ移動（既存の入力内容は保持）
     if (!out.org.departments.some(d => d.id === 'o-eigyo' || d.name === '営業部')) {
       const src = (DEFAULTS.org.departments || []).find(d => d.id === 'o-eigyo');
@@ -1060,8 +1060,9 @@ function migrate(saved) {
   if (!Array.isArray(out.customSections)) out.customSections = clone(DEFAULTS.customSections);
   out.customSections.forEach(c => {
     if (!Array.isArray(c.blocks)) c.blocks = [];
+    if (!Array.isArray(c.images)) c.images = [];
     if (c.desc === undefined) c.desc = '';
-    c.blocks.forEach(b => { if (b.icon === undefined) b.icon = 'box'; if (b.color === undefined) b.color = c.color; if (b.group === undefined) b.group = ''; });
+    c.blocks.forEach(b => { if (b.icon === undefined) b.icon = 'box'; if (b.color === undefined) b.color = c.color; if (b.group === undefined) b.group = ''; if (!Array.isArray(b.images)) b.images = []; });
   });
   healCustomSections(out);
   if (!Array.isArray(out.sectionOrder)) out.sectionOrder = clone(DEFAULTS.sectionOrder);
@@ -1091,7 +1092,11 @@ function healCustomSections(out) {
     if (!cur) return;
     const txt = (cur.blocks || []).map(b => String(b.content || '') + String(b.body || '') + (b.bullets || []).join('')).join('');
     if (!(cur.blocks || []).length || txt.indexOf(PH) >= 0) {
+      const keep = {};
+      (cur.blocks || []).forEach(b => { if (b.images && b.images.length) keep[b.id] = b.images; });
       cur.blocks = clone(dcs.blocks);
+      cur.blocks.forEach(b => { if (keep[b.id]) b.images = keep[b.id]; });
+      if (!Array.isArray(cur.images)) cur.images = [];
       if (!cur.desc) cur.desc = dcs.desc || '';
       if (!cur.title) cur.title = dcs.title;
     }
@@ -1884,10 +1889,10 @@ function applySections() {
         + '<span data-sec-title></span></div>'
         + '<div class="flex items-center gap-2"><span class="text-xs text-slate-300 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 font-bold">自由セクション</span>'
         + '<button type="button" data-act="add-block" data-id="' + esc(cs.id) + '" class="admin-only hidden h-9 px-3 rounded-lg bg-amber-500 text-slate-900 text-xs font-black transition items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i>項目を追加</button>'
+        + '<button type="button" data-act="add-csimage" data-id="' + esc(cs.id) + '" class="admin-only hidden h-9 px-3 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-black transition items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i>画像を追加</button>'
         + '<button type="button" data-act="edit-csec" data-id="' + esc(cs.id) + '" class="admin-only hidden h-9 px-3 rounded-lg bg-slate-800 border border-slate-600 text-slate-200 text-xs font-bold transition items-center gap-1.5"><i data-lucide="pencil" class="w-3.5 h-3.5"></i>セクション編集</button>'
         + '</div></div>'
-        + '<div class="p-5 sm:p-6"><div data-custom-body class="space-y-5"></div></div>';
-      main.appendChild(el);
+        + '<div class="p-5 sm:p-6"><div data-custom-body class="space-y-5"></div></div>';      main.appendChild(el);
     }
     const col = pal(cs.color);
     const ic = el.querySelector('[data-sec-icon]');
@@ -2001,7 +2006,10 @@ function blockHtml(cs, b) {
     + '<h3 class="font-bold text-base leading-snug" style="color:' + col.fg + '">' + esc(b.title) + '</h3></div>'
     + '<span class="flex items-center gap-1 shrink-0">' + move + adminBtns('edit-block', b.id, cs.id) + '</span>'
     + '</div>'
-    + '<div class="p-4 sm:p-5 space-y-2.5">' + richBlock(blockContent(b)) + '</div></div>';
+    + '<div class="p-4 sm:p-5 space-y-2.5">' + richBlock(blockContent(b))
+    + ((b.images && b.images.length) ? imageGallery(b.images, cs.id, b.id) + imgSizeNote(b.images) : '')
+    + (admin ? '<div>' + addBtn('画像を追加', 'add-blockimage', cs.id, b.id) + '</div>' : '')
+    + '</div></div>';
 }
 function renderCustomSections() {
   (D.customSections || []).forEach(cs => {
@@ -2027,7 +2035,13 @@ function renderCustomSections() {
       }
       out += blockHtml(cs, b);
     });
-    body.innerHTML = desc + toc + out + (admin ? '<div>' + addBtn('項目を追加', 'add-block', cs.id) + '</div>' : '');
+    const secImgs = (cs.images && cs.images.length)
+      ? '<div class="space-y-2.5 bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5">'
+        + '<p class="font-bold text-slate-900 text-sm flex items-center gap-2"><span class="w-4 h-4 text-slate-500">' + ICONS.layout + '</span>全体像・判断基準の図</p>'
+        + imageGallery(cs.images, cs.id, null) + imgSizeNote(cs.images) + '</div>'
+      : '';
+    body.innerHTML = desc + secImgs + toc + out
+      + (admin ? '<div class="flex flex-wrap gap-2">' + addBtn('項目を追加', 'add-block', cs.id) + addBtn('画像を追加', 'add-csimage', cs.id) + '</div>' : '');
   });
 }
 function renderSectionManager() {
@@ -2106,6 +2120,103 @@ function deleteCustomSection(id) {
   D.sectionOrder = (D.sectionOrder || []).filter(k => k !== id);
   save(); renderAll(); lucide.createIcons(); showToast('削除しました');
 }
+/* ---------- 仕分けセクションの画像（アップロード・表示・編集） ----------
+   ・画像はブラウザ内で自動縮小（最大幅1400px・JPEG）してから保存します
+   ・保存先はデータ本体（クラウド同期ONなら全端末に共有されます）            */
+let imgTarget = null;
+function pickImages(kind, sectionId, blockId) {
+  imgTarget = { kind: kind, sectionId: sectionId, blockId: blockId || null };
+  let inp = document.getElementById('imgPicker');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.id = 'imgPicker'; inp.accept = 'image/*'; inp.multiple = true;
+    inp.className = 'hidden';
+    inp.addEventListener('change', onImagesPicked);
+    document.body.appendChild(inp);
+  }
+  inp.value = '';
+  inp.click();
+}
+function compressImage(file, maxW, quality) {
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const nw = img.naturalWidth || maxW, nh = img.naturalHeight || maxW;
+        const sc = Math.min(1, maxW / nw);
+        const w = Math.max(1, Math.round(nw * sc)), h = Math.max(1, Math.round(nh * sc));
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        let out = null;
+        try { out = c.toDataURL('image/jpeg', quality); } catch (e) { out = null; }
+        res(out || ev.target.result);
+      };
+      img.onerror = () => res(ev.target.result);
+      img.src = ev.target.result;
+    };
+    r.onerror = () => res(null);
+    r.readAsDataURL(file);
+  });
+}
+async function onImagesPicked() {
+  const files = Array.from(this.files || []);
+  const t = imgTarget; imgTarget = null;
+  if (!files.length || !t) return;
+  let added = 0;
+  for (let i = 0; i < files.length; i++) {
+    if (!/^image\//.test(files[i].type)) continue;
+    const data = await compressImage(files[i], 1400, 0.78);
+    if (!data) continue;
+    const rec = { id: uid('img-'), data: data, caption: '' };
+    const cs = (D.customSections || []).find(x => x.id === t.sectionId);
+    if (!cs) continue;
+    if (t.kind === 'block') {
+      const b = (cs.blocks || []).find(x => x.id === t.blockId);
+      if (!b) continue;
+      b.images = b.images || []; b.images.push(rec);
+    } else {
+      cs.images = cs.images || []; cs.images.push(rec);
+    }
+    added++;
+  }
+  if (added) { save(); renderCustomSections(); lucide.createIcons(); showToast(added + '枚の画像を追加しました'); }
+  else showToast('画像を追加できませんでした');
+}
+function imageGallery(list, sectionId, blockId) {
+  const kind = blockId ? 'block' : 'sec';
+  return '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' + list.map(im =>
+    '<figure class="bg-white rounded-xl border border-slate-200 overflow-hidden">'
+    + '<div class="relative">'
+    + '<img src="' + esc(im.data) + '" alt="' + esc(im.caption || '仕分けの図') + '" loading="lazy" class="w-full h-auto max-h-[24rem] object-contain bg-slate-100 cursor-pointer" onclick="window.open(this.src)">'
+    + (admin ? '<button type="button" data-act="img-del" data-id="' + esc(im.id) + '" data-extra="' + esc(sectionId) + '" data-kind="' + kind + '" data-block="' + esc(blockId || '') + '" class="absolute top-2 right-2 grid h-8 w-8 place-items-center rounded-lg bg-white/90 border border-rose-200 text-rose-600 hover:bg-rose-50 transition" title="この画像を削除"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>' : '')
+    + '</div>'
+    + '<figcaption class="p-2.5">' + (admin
+        ? '<input data-imgcap="' + esc(im.id) + '" data-extra="' + esc(sectionId) + '" data-kind="' + kind + '" data-block="' + esc(blockId || '') + '" value="' + esc(im.caption || '') + '" placeholder="キャプション（任意）" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-amber-400">'
+        : (im.caption ? '<p class="text-xs text-slate-600 leading-relaxed">' + esc(im.caption) + '</p>' : ''))
+    + '</figcaption></figure>').join('') + '</div>';
+}
+function imgSizeNote(list) {
+  const bytes = (list || []).reduce((n, im) => n + Math.round(((im.data || '').length) * 0.75), 0);
+  if (!bytes) return '';
+  const mb = bytes / 1048576;
+  const warn = bytes > 2 * 1048576;
+  return '<p class="text-[11px] ' + (warn ? 'text-rose-600 font-bold' : 'text-slate-400') + '">画像 ' + (list || []).length + '枚 ／ 約' + mb.toFixed(2) + 'MB'
+    + (warn ? ' ※サイズが大きくなっています。枚数を減らすか、小さい画像をご利用ください' : '') + '</p>';
+}
+function deleteImage(ds) {
+  const cs = (D.customSections || []).find(x => x.id === ds.extra);
+  if (!cs) return;
+  if (!confirm('この画像を削除しますか？')) return;
+  if (ds.kind === 'block') {
+    const b = (cs.blocks || []).find(x => x.id === ds.block);
+    if (b) b.images = (b.images || []).filter(x => x.id !== ds.id);
+  } else cs.images = (cs.images || []).filter(x => x.id !== ds.id);
+  save(); renderCustomSections(); lucide.createIcons(); showToast('画像を削除しました');
+}
+
 function openCustomBlockEditor(sectionId, blockId) {
   const cs = (D.customSections || []).find(x => x.id === sectionId); if (!cs) return;
   const b = blockId ? cs.blocks.find(x => x.id === blockId) : null;
@@ -2487,6 +2598,7 @@ document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
   const act = el.dataset.act, id = el.dataset.id, extra = el.dataset.extra;
+  if (act === 'img-del') { e.preventDefault(); deleteImage(el.dataset); return; }
   const map = {
     'add-quick': () => openQuickEditor(null), 'edit-quick': () => openQuickEditor(id), 'del-quick': () => removeAt('quick', id),
     'edit-post': () => openPostEditor(id), 'del-post': () => removeAt('post', id),
@@ -2505,6 +2617,7 @@ document.addEventListener('click', e => {
     'add-csec': () => openCustomSectionEditor(null), 'edit-csec': () => openCustomSectionEditor(id), 'del-csec': () => deleteCustomSection(id),
     'edit-sec': () => openSectionEditor(id), 'sec-up': () => moveSection(id, -1), 'sec-down': () => moveSection(id, 1), 'sec-hide': () => toggleSectionHidden(id),
     'add-block': () => openCustomBlockEditor(id, null), 'edit-block': () => openCustomBlockEditor(extra, id), 'del-block': () => removeAt('block', id, extra),
+    'add-csimage': () => pickImages('sec', id, null), 'add-blockimage': () => pickImages('block', id, extra),
     'blk-up': () => moveBlock(extra, id, -1), 'blk-down': () => moveBlock(extra, id, 1),
     'add-orgdept': () => openOrgDeptEditor(null), 'edit-orgdept': () => openOrgDeptEditor(id), 'del-orgdept': () => removeAt('orgdept', id),
     'orgdept-up': () => moveOrgDept(id, -1), 'orgdept-down': () => moveOrgDept(id, 1),
@@ -2600,6 +2713,16 @@ document.addEventListener('input', e => {
     h.textContent = s.msg;
     h.className = 'mt-1.5 text-[11px] font-bold ' + (s.ok ? 'text-emerald-400' : 'text-slate-400');
   }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (!el || !el.dataset || !el.dataset.imgcap) return;
+  const cs = (D.customSections || []).find(x => x.id === el.dataset.extra);
+  if (!cs) return;
+  const list = el.dataset.kind === 'block' ? (((cs.blocks || []).find(b => b.id === el.dataset.block) || {}).images || []) : (cs.images || []);
+  const im = list.find(x => x.id === el.dataset.imgcap);
+  if (!im) return;
+  im.caption = el.value.trim(); save(); showToast('キャプションを保存しました');
 });
 
 /* ---------- 初期化 ---------- */
