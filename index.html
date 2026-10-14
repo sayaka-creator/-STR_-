@@ -1658,7 +1658,6 @@ function renderAll() {
   renderExpense();
   applySections();
   renderCustomSections();
-  renderNav();
   renderSectionManager();
   const li = $('#lastSyncInfo'); if (li) li.textContent = fmtLastSync();
   updateUndoBtn();
@@ -1921,6 +1920,12 @@ function applySections() {
     const el = main.querySelector(':scope > section[data-sec="' + key + '"]');
     if (el) main.appendChild(el);
   });
+  // すべてのセクションに、上部ナビのリンク先となるIDを付与（組み込み・自由セクション共通）
+  Array.from(main.querySelectorAll(':scope > section[data-sec]')).forEach(el => {
+    const k = el.dataset.sec;
+    if (k && el.id !== k) el.id = k;
+  });
+  renderNav(); // セクション確定後にナビを再生成して、リンク先とIDを必ず一致させる
   // 管理者用の投稿パネルは新着情報セクションの直前に固定
   const ap = document.getElementById('adminPanel');
   const newsEl = main.querySelector(':scope > section[data-sec="news"]');
