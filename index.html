@@ -338,6 +338,23 @@
             </div>
         </section>
 
+        <!-- 買取不可・要確認商品ガイド -->
+        <section id="guide" data-sec="guide" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 font-bold text-base">
+                    <span data-sec-icon class="grid h-9 w-9 place-items-center rounded-xl bg-rose-500/15 text-rose-400"><i data-lucide="search" class="w-4.5 h-4.5"></i></span>
+                    <span data-sec-title>買取不可・要確認商品ガイド</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-rose-300 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 font-bold">現場確認用</span>
+                    <button data-act="add-gcat" class="admin-only hidden h-9 px-3 rounded-lg bg-amber-500 text-slate-900 text-xs font-black transition items-center gap-1.5">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>カテゴリーを追加</span>
+                    </button>
+                </div>
+            </div>
+            <div class="p-5 sm:p-6"><div id="guideBody" class="space-y-4"></div></div>
+        </section>
+
         <!-- 外部ツール・リンク集 -->
         <section id="links" data-sec="links" class="scroll-mt-40 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
@@ -545,7 +562,10 @@ const ICONS = {
   trash:  svg('<path d="M5 7h14"/><path d="M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7"/><path d="M7 7l.9 12A1.5 1.5 0 0 0 9.4 20.5h5.2A1.5 1.5 0 0 0 16 19l.9-12"/>'),
   scissors:svg('<circle cx="6.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/><path d="M8.6 8.4L20 19"/><path d="M8.6 15.6L20 5"/>'),
   building:svg('<path d="M4 21V5.5A1.5 1.5 0 0 1 5.5 4h7A1.5 1.5 0 0 1 14 5.5V21"/><path d="M14 10h4.5A1.5 1.5 0 0 1 20 11.5V21"/><path d="M3 21h18"/><path d="M7 8h2M7 12h2M7 16h2M16.5 14h1M16.5 17.5h1"/>'),
-  map:    svg('<path d="M9 4.5L3.5 6.5v13L9 17.5l6 2 5.5-2v-13l-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>')
+  map:    svg('<path d="M9 4.5L3.5 6.5v13L9 17.5l6 2 5.5-2v-13l-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>'),
+  search: svg('<circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/>'),
+  image:  svg('<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l4.8-4.6 3.4 3.2 2.6-2.4 4.2 3.8"/>'),
+  info:   svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.8h.01"/>')
 };
 
 /* ---------- 初期データ ---------- */
@@ -696,11 +716,26 @@ const DEFAULTS = {
     { key: 'org',     title: '組織図', icon: 'users', hidden: false },
     { key: 'news',    title: '新着情報・社内発信（通達・連絡）', icon: 'bell', hidden: false },
     { key: 'price',   title: '株式会社STR 売価設定表（社外秘・2026/08/24作成）', icon: 'table', hidden: false },
+    { key: 'guide',   title: '買取不可・要確認商品ガイド', icon: 'search', hidden: false },
     { key: 'links',   title: '外部ツール・リンク集', icon: 'link', hidden: false },
     { key: 'manual',  title: '催事買取 開店・閉店業務まとめ（チェックリスト）', icon: 'list', hidden: false },
     { key: 'expense', title: '交通費・経費申請のご案内', icon: 'receipt', hidden: false }
   ],
-  sectionOrder: ['quick', 'org', 'news', 'price', 'links', 'manual', 'c-shikake', 'expense'],
+  sectionOrder: ['quick', 'org', 'news', 'price', 'guide', 'links', 'manual', 'c-shikake', 'expense'],
+  guide: {
+    v: 1,
+    searchPlaceholder: '商品名で検索（例：テレカ、カメラ、金歯）',
+    categories: [
+      { id: 'gc-1', name: 'ブランド・メッキアクセサリー', icon: 'gem',    color: 'pink',    hidden: false, items: [] },
+      { id: 'gc-2', name: '貴金属（金・銀・プラチナ）',   icon: 'ring',   color: 'amber',   hidden: false, items: [] },
+      { id: 'gc-3', name: '切手・ハガキ・収入印紙',       icon: 'stamp',  color: 'indigo',  hidden: false, items: [] },
+      { id: 'gc-4', name: '金券・テレカ',                 icon: 'ticket', color: 'emerald', hidden: false, items: [] },
+      { id: 'gc-5', name: 'ガラケー・スマートフォン',     icon: 'phone',  color: 'sky',     hidden: false, items: [] },
+      { id: 'gc-6', name: 'カメラ・デジタル機器',         icon: 'camera', color: 'violet',  hidden: false, items: [] },
+      { id: 'gc-7', name: '時計・ライター・筆記具',       icon: 'watch',  color: 'orange',  hidden: false, items: [] },
+      { id: 'gc-8', name: 'その他・要確認',               icon: 'alert',  color: 'slate',   hidden: false, items: [] }
+    ]
+  },
   org: {
     v: 3,
     root: '株式会社STR',
@@ -820,6 +855,7 @@ document.addEventListener('toggle', e => {
 let undoStack = [];
 let prevState = null;
 let D = loadData();
+try { if (seedGuideItemsOn(D.guide)) localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {}
 prevState = JSON.stringify(D);
 let admin = false;
 let newsView = 'recent';
@@ -1027,10 +1063,128 @@ function loadData() {
     return m;
   } catch (e) { return clone(DEFAULTS); }
 }
+/* 買取NG・金額マイナス用の組み込みカテゴリー（常に先頭に表示） */
+function guideNgCat() { return { id: 'gc-ng', name: '買取NG・金額マイナス', icon: 'alert', color: 'rose', ng: true, hidden: false, items: [] }; }
+function ensureGuideNgOn(g) {
+  if (!g || typeof g !== 'object') return g;
+  if (!Array.isArray(g.categories)) g.categories = [];
+  if (g.ngRemoved) return g;
+  if (!g.categories.some(c => c && c.ng)) g.categories.unshift(guideNgCat());
+  return g;
+}
+function ensureGuideNg() { if (D && D.guide) ensureGuideNgOn(D.guide); }
+
+/* 初期事例（18件・初回のみ投入。写真は後から追加できます） */
+function guideSeedData() {
+  return [
+    { cat: 'gc-6', id: 'gs-01', kind: 'junk', title: 'レンズエラー（レンズが戻らない）',
+      criteria: ['電源OFFでもレンズが飛び出したまま', 'レンズが開いたまま戻らない'],
+      handling: ['通常カメラとして値付けしない', 'ジャンクまとめカメラとして処理する'],
+      talk: 'レンズ部分に不具合が見られるため、通常品ではなくジャンク品としての査定になります。' },
+    { cat: 'gc-6', id: 'gs-02', kind: 'junk', title: '液晶画面割れ',
+      criteria: ['液晶画面にひび割れがある', '画面が破損している'],
+      handling: ['通常カメラとして値付けしない', 'ジャンクまとめカメラとして処理する'],
+      talk: '画面に破損があるため、通常のカメラとは異なる査定になります。' },
+    { cat: 'gc-6', id: 'gs-03', kind: 'price', title: '販売済み実績による値付け（カメラ）',
+      criteria: ['Googleレンズで商品を検索', 'メルカリ・ヤフオクの販売済み実績を確認', 'なるべく直近1年以内の実績を参考にする', '型番・状態・付属品の違いに注意', '販売中の価格を基準にしない'],
+      handling: ['売価5,000円以上の自己値付け対象商品は、販売済み価格の40％を目安に値付けする', '販売実績がない場合は担当部署へ確認する'],
+      talk: '' },
+    { cat: 'gc-7', id: 'gs-04', kind: 'price', title: '時計の値付けルール',
+      criteria: ['Googleレンズで型番・モデルを確認', 'メルカリ・ヤフオクの販売済み実績を確認', 'なるべく直近1年以内の実績を参考にする', '型番・状態・付属品の違いに注意', '販売中の価格を基準にしない'],
+      handling: ['売価5,000円以上の自己値付け対象商品は、販売済み価格の40％を目安に値付けする', '販売実績がない場合は担当部署へ確認する'],
+      talk: '' },
+    { cat: 'gc-3', id: 'gs-05', kind: 'ng', title: '使用済み・消印付き切手',
+      criteria: ['消印やスタンプが付いている', '使用済みの切手'],
+      handling: ['買取不可', 'お客様へ返却を基本とする', '処分する場合はお客様の了承を得て、社内ルールに従う'],
+      talk: 'こちらは使用済みの切手に該当するため、お買取りの対象外となります。' },
+    { cat: 'gc-3', id: 'gs-06', kind: 'ng', title: '台紙貼り付け済み切手',
+      criteria: ['切手が台紙にのり付けされている', '台紙から剥がせない状態'],
+      handling: ['買取不可', 'お客様へ返却する'],
+      talk: 'こちらは台紙に貼り付けられているため、お買取りの対象外となります。' },
+    { cat: 'gc-3', id: 'gs-07', kind: 'ng', title: '裏面のりなし切手',
+      criteria: ['切手裏面ののりがない', '裏面ののりが剥がれている'],
+      handling: ['買取不可', 'お客様へ返却する'],
+      talk: '裏面ののりがない状態のため、当店ではお買取りできない商品となります。' },
+    { cat: 'gc-3', id: 'gs-08', kind: 'ng', title: '切手の汚れ・シミ・破れ',
+      criteria: ['表面に汚れやシミがある', '切手が破れている', '切手の一部が欠損している'],
+      handling: ['買取不可', 'お客様へ返却する'],
+      talk: '汚れや破損が見られるため、お買取りの対象外となります。' },
+    { cat: 'gc-3', id: 'gs-09', kind: 'ng', title: 'ハガキの書き損じ・汚れ',
+      criteria: ['宛名や文章の書き損じがある', '表面・裏面に汚れやシミがある'],
+      handling: ['買取不可', 'お客様へ返却する'],
+      talk: 'こちらは書き損じや汚れがあるため、お買取りの対象外となります。' },
+    { cat: 'gc-4', id: 'gs-10', kind: 'ng', title: '金券の表面・裏面の汚れ',
+      criteria: ['表面に汚れやシミがある', '裏面に汚れやシミがある', '表面がきれいでも裏面に汚れがある場合は買取不可'],
+      handling: ['買取不可', '必ず表面・裏面の両方を確認する'],
+      talk: '汚れがある金券は販売が難しいため、お買取りできない商品となります。' },
+    { cat: 'gc-4', id: 'gs-11', kind: 'ng', title: '金券の裏面スタンプ',
+      criteria: ['金券の裏面にスタンプが押されている', '表面がきれいでも裏面にスタンプがあれば対象外'],
+      handling: ['買取不可', '金券の裏面を必ず確認する'],
+      talk: '裏面にスタンプがあるため、当店ではお買取りの対象外となります。' },
+    { cat: 'gc-4', id: 'gs-12', kind: 'ng', title: '金券の破れ・折れ',
+      criteria: ['金券が破れている', '強い折れや著しい傷みがある'],
+      handling: ['買取不可', 'お客様へ返却する'],
+      talk: '券面に破損があるため、お買取りの対象外となります。' },
+    { cat: 'gc-4', id: 'gs-13', kind: 'ng', title: 'テレカ裏面の汚れ・シミ',
+      criteria: ['裏面に茶色いシミがある', '裏面に汚れや付着物がある', '表面がきれいでも裏面が汚れている場合は買取不可'],
+      handling: ['買取不可', '必ず裏面を確認する'],
+      talk: '裏面に汚れがあり販売できない状態のため、お買取りの対象外となります。' },
+    { cat: 'gc-4', id: 'gs-14', kind: 'ng', title: 'テレカの表面汚れ・破損',
+      criteria: ['表面に汚れやシミがある', 'カードに破れや著しい損傷がある'],
+      handling: ['買取不可', 'お客様へ返却する'],
+      talk: 'カードの状態が販売基準を満たさないため、お買取りできません。' },
+    { cat: 'gc-4', id: 'gs-15', kind: 'ng', title: 'QUOカード番号00始まり',
+      criteria: ['QUOカード裏面の番号を確認', '店舗発行カードで番号が「00」から始まるものは買取不可', '必ず番号の先頭を確認する'],
+      handling: ['買取不可', 'お客様へ返却する'],
+      talk: 'こちらは当店の買取対象外となる種類のQUOカードです。' },
+    { cat: 'gc-5', id: 'gs-16', kind: 'price', title: 'PHS｜売価100円',
+      criteria: ['売価100円', 'ストレート型など小型端末が代表例', 'アンテナ付きのモデルもある', '見た目だけで判断せず型番を確認する', 'ガラケーと誤認して500円を設定しない'],
+      handling: ['PHSとして売価100円を設定する', '判断できない場合は型番を調べる'],
+      talk: 'こちらは折りたたみ携帯＝通称ガラケーではなく、PHSのタイプになります。\n見た目は携帯電話に近いのですが、種類が異なるため対象や価格基準が変わります。\nそのため、通常のガラケーと同じ扱いではなく、PHS基準でのご案内になります。' },
+    { cat: 'gc-5', id: 'gs-17', kind: 'price', title: 'ガラケー｜売価500円',
+      criteria: ['売価500円', '折りたたみ型が代表例', 'PHSにも折りたたみ型があるため注意', '型番・製品情報を確認する'],
+      handling: ['ガラケーと確認できた場合、売価500円を設定する', 'PHSと混同しない'],
+      talk: '' },
+    { cat: 'gc-5', id: 'gs-18', kind: 'price', title: 'PHSとガラケーの違い',
+      criteria: ['PHS：売価100円', 'ガラケー：売価500円', 'PHSはストレート型が代表例', 'ガラケーは折りたたみ型が代表例', 'どちらにも異なる形状の機種があるため、見た目だけで判断しない', '型番・製品情報から判別する'],
+      handling: ['種類を確認してから売価設定する', '判別できない場合は担当部署へ確認する'],
+      talk: '見た目が似ていても種類が異なるため、端末の型番を確認してご案内いたします。' }
+  ];
+}
+function seedGuideItemsOn(g) {
+  if (!g || typeof g !== 'object' || g.seedV1) return false;
+  if (!Array.isArray(g.categories)) g.categories = [];
+  guideSeedData().forEach(s => {
+    const c = g.categories.find(x => x && x.id === s.cat);
+    if (!c) return;
+    c.items = c.items || [];
+    if (c.items.some(x => x.id === s.id)) return;
+    c.items.push({ id: s.id, title: s.title, criteria: s.criteria, handling: s.handling, talk: s.talk || '', kind: s.kind || 'normal', hidden: false, photos: [] });
+  });
+  g.seedV1 = true;
+  return true;
+}
+
 function migrate(saved) {
   const out = Object.assign(clone(DEFAULTS), saved || {});
   ['quickCards', 'posts', 'categories'].forEach(k => { if (!Array.isArray(out[k])) out[k] = clone(DEFAULTS[k]); });
   (out.posts || []).forEach(p => { if (!Array.isArray(p.links)) p.links = []; });
+  if (!out.guide || typeof out.guide !== 'object') out.guide = clone(DEFAULTS.guide);
+  if (!Array.isArray(out.guide.categories)) out.guide.categories = clone(DEFAULTS.guide.categories);
+  if (out.guide.searchPlaceholder === undefined) out.guide.searchPlaceholder = DEFAULTS.guide.searchPlaceholder;
+  ensureGuideNgOn(out.guide);
+  seedGuideItemsOn(out.guide);
+  out.guide.categories.forEach(c => {
+    if (!Array.isArray(c.items)) c.items = [];
+    if (c.hidden === undefined) c.hidden = false;
+    c.items.forEach(it => {
+      if (!Array.isArray(it.photos)) it.photos = [];
+      if (!Array.isArray(it.criteria)) it.criteria = [];
+      if (!Array.isArray(it.handling)) it.handling = [];
+      if (it.talk === undefined) it.talk = '';
+      if (it.hidden === undefined) it.hidden = false;
+    });
+  });
   ['meta', 'quickRules', 'price', 'manual', 'expense'].forEach(k => { if (!out[k] || typeof out[k] !== 'object') out[k] = clone(DEFAULTS[k]); });
   if (!Array.isArray(out.tools)) out.tools = clone(DEFAULTS.tools);
   if (!out.toolNotes) out.toolNotes = clone(DEFAULTS.toolNotes);
@@ -1677,6 +1831,7 @@ function renderAll() {
   renderNews();
   renderOrg();
   renderPrice();
+  renderGuide();
   renderTools();
   renderManual();
   renderExpense();
@@ -1736,6 +1891,7 @@ function fieldHtml(f) {
   let input = '';
   if (f.type === 'textarea') input = '<textarea name="' + f.name + '" rows="' + (f.rows || 4) + '" ' + (f.required ? 'required' : '') + ' class="' + cls + ' leading-relaxed" placeholder="' + esc(f.placeholder || '') + '">' + esc(f.value || '') + '</textarea>';
   else if (f.type === 'select') input = '<select name="' + f.name + '" class="' + cls + '">' + (f.options || []).map(o => '<option value="' + esc(o.value) + '"' + (String(o.value) === String(f.value) ? ' selected' : '') + '>' + esc(o.label) + '</option>').join('') + '</select>';
+  else if (f.type === 'photos') input = guidePhotoFieldHtml();
   else input = '<input type="' + (f.type || 'text') + '" name="' + f.name + '" value="' + esc(f.value || '') + '" ' + (f.required ? 'required' : '') + ' class="' + cls + '" placeholder="' + esc(f.placeholder || '') + '">';
   return '<div>' + label + input + (f.hint ? '<p class="text-xs text-slate-500 mt-1.5 leading-relaxed">' + esc(f.hint) + '</p>' : '') + '</div>';
 }
@@ -1750,6 +1906,7 @@ function openEditor(cfg) {
   if (first) setTimeout(() => first.focus(), 30);
 }
 function closeEditor() {
+  guideDraftPhotos = [];
   $('#modal').classList.add('hidden');
   document.body.style.overflow = '';
   editorSubmit = null;
@@ -2145,7 +2302,6 @@ function openCustomSectionEditor(id) {
 }
 function deleteCustomSection(id) {
   const c = (D.customSections || []).find(x => x.id === id); if (!c) return;
-  if (!confirm('セクション「' + c.title + '」を削除しますか？（中の項目もすべて削除されます）')) return;
   D.customSections = D.customSections.filter(x => x.id !== id);
   D.sectionOrder = (D.sectionOrder || []).filter(k => k !== id);
   save(); renderAll(); lucide.createIcons(); showToast('削除しました');
@@ -2195,6 +2351,7 @@ async function onImagesPicked() {
   const files = Array.from(this.files || []);
   const t = imgTarget; imgTarget = null;
   if (!files.length || !t) return;
+  if (t.kind === 'guide' || t.kind === 'guide-swap') { await onGuideImagesPicked(files, t); return; }
   let added = 0;
   for (let i = 0; i < files.length; i++) {
     if (!/^image\//.test(files[i].type)) continue;
@@ -2214,6 +2371,26 @@ async function onImagesPicked() {
   }
   if (added) { save(); renderCustomSections(); lucide.createIcons(); showToast(added + '枚の画像を追加しました'); }
   else showToast('画像を追加できませんでした');
+}
+/* 買取不可・要確認商品ガイドの写真（追加／差し替え） */
+async function onGuideImagesPicked(files, t) {
+  const f = findGuideItem(t.sectionId, t.blockId);
+  if (!f) return;
+  const swap = t.kind === 'guide-swap';
+  let list = swap ? [] : (f.it.photos || []).slice();
+  let added = 0;
+  for (let i = 0; i < files.length; i++) {
+    if (!/^image\//.test(files[i].type)) continue;
+    if (swap && added >= 1) break;
+    const data = await compressImage(files[i], 1400, 0.78);
+    if (!data) continue;
+    list.push({ id: uid('img-'), data: data, caption: '' });
+    added++;
+  }
+  if (!added) { showToast('写真を追加できませんでした'); return; }
+  f.it.photos = list;
+  save(); renderGuide(); lucide.createIcons();
+  showToast(swap ? '写真を差し替えました' : added + '枚の写真を追加しました');
 }
 function imageGallery(list, sectionId, blockId) {
   const kind = blockId ? 'block' : 'sec';
@@ -2239,7 +2416,6 @@ function imgSizeNote(list) {
 function deleteImage(ds) {
   const cs = (D.customSections || []).find(x => x.id === ds.extra);
   if (!cs) return;
-  if (!confirm('この画像を削除しますか？')) return;
   if (ds.kind === 'block') {
     const b = (cs.blocks || []).find(x => x.id === ds.block);
     if (b) b.images = (b.images || []).filter(x => x.id !== ds.id);
@@ -2510,6 +2686,301 @@ function moveOrgRole(deptId, roleId, dir) {
   const t = a[i]; a[i] = a[j]; a[j] = t; save(); renderAll(); lucide.createIcons();
 }
 
+/* ============================================================
+   買取不可・要確認商品ガイド
+   ・現場スタッフ向け：検索＋カテゴリー選択 → 事例一覧 → 詳細（写真／判断基準／対応方法）
+   ・管理者：カテゴリー・事例の追加／削除、文章編集、写真の追加・差し替え、公開／非公開
+   ・既存のエディタ（openEditor）・画像圧縮・保存の仕組みをそのまま利用
+   ============================================================ */
+let guideView = 'home';   // home | list | detail
+let guideCatId = '';
+let guideItemId = '';
+let guideQuery = '';
+let guideDraftPhotos = [];   // 事例エディタ内の写真（保存で確定）
+
+function guideCats() { if (!D || !D.guide) return []; ensureGuideNg(); return D.guide.categories || []; }
+function findGuideCat(id) { return guideCats().find(c => c.id === id); }
+function findGuideItem(catId, itemId) {
+  const c = findGuideCat(catId); if (!c) return null;
+  const it = (c.items || []).find(x => x.id === itemId); if (!it) return null;
+  return { c: c, it: it };
+}
+function guideItemVisible(it) { return admin ? true : !it.hidden; }
+function guideText(it) {
+  return [it.title || '', (it.criteria || []).join(' '), (it.handling || []).join(' '), it.talk || ''].join(' ') + guideKindOf(it.kind).kw;
+}
+function guideHits(q) {
+  const out = [];
+  guideCats().forEach(c => {
+    if (!admin && c.hidden) return;
+    (c.items || []).forEach(it => {
+      if (!guideItemVisible(it)) return;
+      if (q && guideText(it).toLowerCase().indexOf(q) < 0) return;
+      out.push({ c: c, it: it });
+    });
+  });
+  return out;
+}
+function guideCatIcon(c) {
+  const col = pal(c.color);
+  return '<span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl" style="background:' + col.bg + ';color:' + col.fg + '">' + (ICONS[c.icon] || ICONS.box) + '</span>';
+}
+function guideThumb(it) {
+  const ph = (it.photos || [])[0];
+  if (!ph) return '<div class="h-36 bg-slate-100 grid place-items-center text-slate-300"><span class="w-8 h-8">' + ICONS.image + '</span></div>';
+  return '<img src="' + esc(ph.data) + '" alt="' + esc(it.title) + '" loading="lazy" class="w-full h-36 object-cover bg-slate-100">';
+}
+const GUIDE_KINDS = {
+  normal: { label: '', badge: '', bg: '', kw: '' },
+  ng:     { label: '買取NG（買取不可）', badge: '買取NG', bg: 'bg-rose-600', kw: ' 買取NG 買取不可 お断り' },
+  minus:  { label: '金額マイナス（逆ザヤ）', badge: '金額マイナス', bg: 'bg-orange-500', kw: ' 金額マイナス 逆ザヤ' },
+  junk:   { label: 'ジャンク・別扱い', badge: 'ジャンク・別扱い', bg: 'bg-amber-500', kw: ' ジャンク 別扱い' },
+  price:  { label: '値付け注意', badge: '値付け注意', bg: 'bg-sky-600', kw: ' 値付け注意 値付け' }
+};
+function guideKindOf(k) { return GUIDE_KINDS[k] || GUIDE_KINDS.normal; }
+function guideKindBadge(it) {
+  const k = guideKindOf(it && it.kind);
+  if (!k.badge) return '';
+  return '<span class="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-md text-white ' + k.bg + '">' + k.badge + '</span>';
+}
+/* 事例エディタ内の写真フィールド（保存前の下書き） */
+function guidePhotoFieldHtml() {
+  const list = guideDraftPhotos || [];
+  return '<div id="gphotoField" class="space-y-2">'
+    + (list.length
+        ? '<div class="grid grid-cols-2 gap-2">' + list.map(ph =>
+            '<div class="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100">'
+            + '<img src="' + esc(ph.data) + '" alt="写真" class="w-full h-24 object-cover">'
+            + '<button type="button" onclick="guideDraftDel(\'' + esc(ph.id) + '\')" class="absolute top-1 right-1 grid h-7 w-7 place-items-center rounded-lg bg-white/90 border border-rose-200 text-rose-600 text-sm font-black leading-none" title="この写真を外す">×</button>'
+            + '</div>').join('') + '</div>'
+        : '<div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 py-5 text-center text-xs font-bold text-slate-400">まだ写真がありません</div>')
+    + '<button type="button" onclick="guideDraftPick()" class="w-full h-11 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-sm font-bold transition">写真を選ぶ（現在 ' + list.length + '枚）</button>'
+    + '</div>';
+}
+function guideDraftRefresh() { const el = document.getElementById('gphotoField'); if (el) el.outerHTML = guidePhotoFieldHtml(); }
+function guideDraftPick() {
+  let inp = document.getElementById('guideDraftPicker');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.id = 'guideDraftPicker'; inp.accept = 'image/*'; inp.multiple = true; inp.className = 'hidden';
+    inp.addEventListener('change', async function () {
+      const files = Array.from(this.files || []); this.value = '';
+      if (!files.length) return;
+      let n = 0;
+      for (let i = 0; i < files.length; i++) {
+        if (!/^image\//.test(files[i].type)) continue;
+        const data = await compressImage(files[i], 1400, 0.78);
+        if (!data) continue;
+        guideDraftPhotos.push({ id: uid('img-'), data: data, caption: '' }); n++;
+      }
+      guideDraftRefresh();
+      showToast(n ? n + '枚の写真を追加しました（「保存する」で確定）' : '写真を追加できませんでした');
+    });
+    document.body.appendChild(inp);
+  }
+  inp.value = ''; inp.click();
+}
+function guideDraftDel(pid) { guideDraftPhotos = (guideDraftPhotos || []).filter(x => x.id !== pid); guideDraftRefresh(); }
+
+function guideCaseCard(c, it) {
+  return '<div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow transition flex flex-col">'
+    + '<button type="button" data-act="guide-open" data-id="' + esc(it.id) + '" data-extra="' + esc(c.id) + '" class="text-left w-full">'
+    + guideThumb(it)
+    + '<span class="block px-3 py-2.5 space-y-1">' + (guideKindBadge(it) ? '<span class="block">' + guideKindBadge(it) + '</span>' : '')
+    + '<span class="block font-bold text-sm text-slate-900 leading-snug">' + esc(it.title) + '</span>'
+    + (admin ? '<span class="block text-[10px] font-bold ' + (it.hidden ? 'text-rose-500' : 'text-emerald-600') + '">' + (it.hidden ? '非公開' : '公開中') + '</span>' : '')
+    + '</span></button>'
+    + (admin ? '<div class="flex justify-end gap-1 px-2 pb-2 mt-auto">' + adminBtns('edit-gitem', it.id, c.id) + '</div>' : '')
+    + '</div>';
+}
+function guideBack(label, act) {
+  return '<button type="button" data-act="' + act + '" class="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">'
+    + '<span class="w-3.5 h-3.5 rotate-180">' + ICONS.external + '</span>' + label + '</button>';
+}
+function renderGuide() {
+  const box = $('#guideBody'); if (!box) return;
+  const cats = guideCats();
+  const q = guideQuery.trim().toLowerCase();
+
+  // --- 検索バー（全ビュー共通で上部に固定表示） ---
+  const searchBar = '<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-3">'
+    + '<div class="relative">'
+    + '<span class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400">' + ICONS.search + '</span>'
+    + '<input id="guideSearch" type="search" value="' + esc(guideQuery) + '" placeholder="' + esc((D.guide && D.guide.searchPlaceholder) || '商品名で検索') + '" '
+    + 'class="w-full h-12 pl-10 pr-3.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30">'
+    + '</div>'
+    + '<div id="guideCats">'
+    + (cats.length
+        ? '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">' + cats.filter(c => admin || !c.hidden).map(c => {
+            const n = (c.items || []).filter(guideItemVisible).length;
+            return '<button type="button" data-act="guide-cat" data-id="' + esc(c.id) + '" class="flex items-center gap-2.5 border rounded-2xl px-3.5 py-3 text-left transition ' + (c.ng ? 'bg-rose-50 border-rose-300 hover:border-rose-400' : 'bg-white border-slate-200 hover:border-amber-400') + '">'
+              + guideCatIcon(c)
+              + '<span class="min-w-0"><span class="block font-bold text-[13px] text-slate-800 leading-tight break-words [text-wrap:balance]">' + esc(c.name) + '</span>'
+              + '<span class="block text-[11px] text-slate-400 font-bold tabular-nums">' + n + ' 件' + (c.hidden ? '・非公開' : '') + '</span></span></button>';
+          }).join('') + '</div>'
+        : '<p class="text-center text-sm text-slate-500 py-6">カテゴリーがまだありません。</p>')
+    + '</div>'
+    + '<div id="guideResults"></div>'
+    + '</div>';
+
+  let body = '';
+
+  if (guideView === 'detail') {
+    const f = findGuideItem(guideCatId, guideItemId);
+    if (f) {
+      const c = f.c, it = f.it;
+      const photos = (it.photos || []);
+      const photoBlock = photos.length
+        ? '<div class="grid gap-3 ' + (photos.length > 1 ? 'sm:grid-cols-2' : '') + '">' + photos.map(ph =>
+            '<figure class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden">'
+            + '<img src="' + esc(ph.data) + '" alt="' + esc(ph.caption || it.title) + '" class="w-full max-h-[26rem] object-contain bg-slate-100 cursor-pointer" onclick="window.open(this.src)">'
+            + ((ph.caption || admin) ? '<figcaption class="px-3 py-2 text-xs text-slate-600">' + (admin
+                ? '<input data-gphotocap="' + esc(ph.id) + '" data-extra="' + esc(c.id) + '" data-block="' + esc(it.id) + '" value="' + esc(ph.caption || '') + '" placeholder="写真の説明（任意）" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-400">'
+                : esc(ph.caption || '')) + '</figcaption>' : '')
+            + (admin ? '<div class="flex justify-end px-2 pb-2"><button type="button" data-act="gphoto-del" data-id="' + esc(ph.id) + '" data-extra="' + esc(c.id) + '" data-block="' + esc(it.id) + '" class="grid h-8 w-8 place-items-center rounded-lg bg-white/90 border border-rose-200 text-rose-600 hover:bg-rose-50 transition" title="この写真を削除"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>' : '')
+            + '</figure>').join('') + '</div>'
+        : '<div class="bg-slate-50 border border-dashed border-slate-300 rounded-2xl py-10 grid place-items-center text-slate-400"><span class="text-xs font-bold">写真がまだありません</span></div>';
+
+      const list = (title, arr, cls) => (arr && arr.length)
+        ? '<div class="' + cls + '"><p class="font-bold text-slate-900 text-sm mb-2">' + title + '</p>'
+          + '<ul class="space-y-1.5">' + arr.map(x => '<li class="flex items-start gap-2 text-sm text-slate-700 leading-relaxed"><span class="shrink-0 text-slate-400">・</span><span>' + esc(x) + '</span></li>').join('') + '</ul></div>'
+        : '';
+
+      body = guideBack('カテゴリー一覧へ', 'guide-home')
+        + '<div class="flex flex-wrap items-center justify-between gap-2">'
+        + '<span class="inline-flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">' + esc(c.name) + '</span>'
+        + (admin ? '<span class="flex items-center gap-1">'
+            + '<button type="button" data-act="guide-photo-add" data-id="' + esc(c.id) + '" data-extra="' + esc(it.id) + '" class="h-9 px-3 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition">写真を追加</button>'
+            + '<button type="button" data-act="guide-photo-swap" data-id="' + esc(c.id) + '" data-extra="' + esc(it.id) + '" class="h-9 px-3 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-xs font-bold transition">写真を差し替え</button>'
+            + adminBtns('edit-gitem', it.id, c.id)
+            + '<button type="button" data-act="gitem-hide" data-id="' + esc(it.id) + '" data-extra="' + esc(c.id) + '" class="h-9 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition">' + (it.hidden ? '公開する' : '非公開にする') + '</button>'
+            + '</span>' : '')
+        + '</div>'
+        + '<h3 class="font-black text-slate-900 text-lg leading-snug">' + esc(it.title) + '</h3>'
+        + (guideKindBadge(it) ? '<div><span class="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-lg text-white ' + guideKindOf(it.kind).bg + '">' + guideKindOf(it.kind).label + '</span></div>' : '')
+        + photoBlock
+        + list('判断基準・注意点', it.criteria, 'bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5')
+        + list('対応方法', it.handling, 'bg-emerald-50 border border-emerald-200 rounded-2xl p-4 sm:p-5')
+        + (it.talk ? '<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5"><p class="font-bold text-slate-900 text-sm mb-2">お客様への説明トーク</p><p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">' + esc(it.talk) + '</p></div>' : '')
+        + (admin ? '<p class="text-[11px] text-slate-400">※「写真を差し替え」は、この事例の写真を選んだ1枚に置き換えます。写真は横長4:3（1600×1200px程度）がおすすめです。</p>' : '');
+    } else { guideView = 'home'; }
+  }
+
+  if (guideView === 'list') {
+    const c = findGuideCat(guideCatId);
+    if (c) {
+      const items = (c.items || []).filter(guideItemVisible);
+      body = guideBack('カテゴリー一覧へ', 'guide-home')
+        + '<div class="flex flex-wrap items-center justify-between gap-2">'
+        + '<div class="flex items-center gap-2.5 min-w-0">' + guideCatIcon(c)
+        + '<h3 class="font-black text-slate-900 text-base truncate">' + esc(c.name) + '</h3>'
+        + '<span class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full tabular-nums shrink-0">' + items.length + ' 件</span></div>'
+        + (admin ? '<span class="flex items-center gap-1">' + adminBtns('edit-gcat', c.id)
+            + '<button type="button" data-act="gcat-hide" data-id="' + esc(c.id) + '" class="h-9 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition">' + (c.hidden ? '公開する' : '非公開にする') + '</button>'
+            + '</span>' : '')
+        + '</div>'
+        + (items.length
+            ? '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">' + items.map(it => guideCaseCard(c, it)).join('') + '</div>'
+            : (c.ng
+                ? '<div class="text-center py-10 bg-rose-50 rounded-2xl border border-dashed border-rose-300 space-y-2 px-4"><p class="text-sm font-bold text-rose-600">このカテゴリーにはまだ事例がありません。</p><p class="text-xs text-slate-500 leading-relaxed">買取NGの事例は、商品ごとのカテゴリー（切手・ハガキ・金券・テレカ・ガラケーなど）に入っています。<br>上の検索欄に「<b>買取NG</b>」と入力すると、全カテゴリーの買取NG事例をまとめて表示できます。</p></div>'
+                : '<div class="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300 space-y-1.5"><p class="text-sm font-bold text-slate-500">このカテゴリーにはまだ事例がありません。</p><p class="text-xs text-slate-400">写真つきで2件ほど登録すると、現場で探しやすくなります。</p></div>'))
+        + (admin ? '<div>' + addBtn('事例を追加', 'add-gitem', c.id) + '</div>' : '');
+    } else { guideView = 'home'; }
+  }
+
+  if (guideView === 'home') {
+    body = (admin
+      ? '<p class="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 leading-relaxed">写真は<b>横長4:3（例 1600×1200px）</b>がおすすめです。事例は<b>各カテゴリー2件ほど</b>、買取NGの写真は「買取NG・金額マイナス」に入れてください。</p>'
+        + '<div class="flex justify-end">' + addBtn('カテゴリーを追加', 'add-gcat') + '</div>'
+      : '');
+  }
+
+  box.innerHTML = searchBar + body;
+  const gi = $('#guideSearch');
+  if (gi && guideView !== 'home') { /* 検索欄は上部に固定 */ }
+}
+function guideSearchInput() {
+  const el = $('#guideSearch'); if (!el) return;
+  guideQuery = el.value;
+  const q = guideQuery.trim().toLowerCase();
+  const catsEl = $('#guideCats');
+  const resEl = $('#guideResults');
+  if (catsEl) catsEl.classList.toggle('hidden', q.length > 0);
+  if (!resEl) return;
+  if (!q) { resEl.innerHTML = ''; return; }
+  const hits = guideHits(q);
+  resEl.innerHTML = '<div class="space-y-3 pt-1">'
+    + '<p class="text-xs font-bold text-slate-500">検索結果：' + hits.length + ' 件</p>'
+    + (hits.length
+        ? '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">' + hits.map(x => guideCaseCard(x.c, x.it)).join('') + '</div>'
+        : '<p class="text-center text-sm text-slate-500 py-8 bg-white rounded-2xl border border-dashed border-slate-300">一致する商品はありません。</p>')
+    + '</div>';
+}
+function openGuideCat(id) { guideCatId = id; guideItemId = ''; guideQuery = ''; guideView = 'list'; renderGuide(); lucide.createIcons(); window.scrollTo({ top: (document.getElementById('guide') || {}).offsetTop ? document.getElementById('guide').offsetTop - 130 : 0, behavior: 'smooth' }); }
+function openGuideHome() { guideView = 'home'; guideCatId = ''; guideItemId = ''; guideQuery = ''; renderGuide(); lucide.createIcons(); }
+function openGuideItem(catId, itemId) { guideCatId = catId; guideItemId = itemId; guideQuery = ''; guideView = 'detail'; renderGuide(); lucide.createIcons(); }
+
+function openGuideCatEditor(id) {
+  const c = id ? findGuideCat(id) : null;
+  openEditor({
+    title: c ? 'カテゴリーを編集' : 'カテゴリーを追加', desc: '現場スタッフが選ぶボタンになります。',
+    fields: [
+      { name: 'name', label: 'カテゴリー名', value: c ? c.name : '', required: true, placeholder: '例：金券・テレカ' },
+      { name: 'status', label: '公開設定', type: 'select', value: c && c.hidden ? 'hidden' : 'open',
+        options: [{ value: 'open', label: '公開する' }, { value: 'hidden', label: '非公開にする' }] },
+      iconSelect(c ? c.icon : 'box'), colorSelect(c ? c.color : 'slate')
+    ],
+    onSubmit: fd => {
+      const rec = { id: c ? c.id : uid('gc-'), name: fd.get('name').trim(), icon: fd.get('icon'), color: fd.get('color'), hidden: fd.get('status') === 'hidden', items: c ? c.items : [] };
+      if (c) Object.assign(c, rec); else D.guide.categories.push(rec);
+      save(); closeEditor(); renderAll(); lucide.createIcons(); showToast(c ? 'カテゴリーを更新しました' : 'カテゴリーを追加しました');
+    }
+  });
+}
+function openGuideItemEditor(catId, itemId) {
+  const c = findGuideCat(catId); if (!c) return;
+  const it = itemId ? (c.items || []).find(x => x.id === itemId) : null;
+  guideDraftPhotos = it ? clone(it.photos || []) : [];
+  openEditor({
+    title: it ? '事例を編集' : '事例を追加', desc: '「' + c.name + '」に表示されます。文章は短く・箇条書きで。',
+    fields: [
+      { name: 'title', label: '商品名・見出し', value: it ? it.title : '', required: true, placeholder: '例：テレフォンカード（105度以上）' },
+      { type: 'photos', label: '写真（2枚程度がおすすめ）', hint: '推奨サイズ：横長4:3（例 1600×1200px）。スマホで撮った写真のままでOKです。大きい画像は最大1400pxに自動縮小します。' },
+      { name: 'criteria', label: '判断基準・注意点（1行に1項目）', type: 'textarea', rows: 5, value: it ? (it.criteria || []).join('\n') : '', placeholder: '例：105度以上は買取不可\n例：50度は¥350で買取' },
+      { name: 'handling', label: '対応方法（1行に1項目）', type: 'textarea', rows: 4, value: it ? (it.handling || []).join('\n') : '', placeholder: '例：お客様にお断りする\n例：ジャンクまとめとして処理' },
+      { name: 'talk', label: 'お客様への説明トーク（任意）', type: 'textarea', rows: 3, value: it ? (it.talk || '') : '', placeholder: '必要な商品だけ記入してください' },
+      { name: 'kind', label: '判定の種類', type: 'select', value: it ? (it.kind || 'normal') : (c.ng ? 'ng' : 'normal'),
+        options: [{ value: 'normal', label: '通常（買取できる）' }, { value: 'ng', label: '買取NG（買取不可）' }, { value: 'minus', label: '金額マイナス（逆ザヤ）' }, { value: 'junk', label: 'ジャンク・別扱い' }, { value: 'price', label: '値付け注意' }] },
+      { name: 'status', label: '公開設定', type: 'select', value: it && it.hidden ? 'hidden' : 'open',
+        options: [{ value: 'open', label: '公開する' }, { value: 'hidden', label: '非公開にする' }] },
+    ],
+    onSubmit: fd => {
+      const lines = s => String(s || '').split('\n').map(x => x.trim()).filter(Boolean);
+      const rec = {
+        id: it ? it.id : uid('gi-'), title: fd.get('title').trim(),
+        criteria: lines(fd.get('criteria')), handling: lines(fd.get('handling')),
+        talk: fd.get('talk').trim(), hidden: fd.get('status') === 'hidden', kind: fd.get('kind') || 'normal',
+        photos: (guideDraftPhotos || []).slice()
+      };
+      if (it) Object.assign(it, rec); else c.items.push(rec);
+      save(); closeEditor(); guideDraftPhotos = [];
+      if (!it) { guideCatId = c.id; guideItemId = rec.id; guideView = 'detail'; }
+      renderAll(); lucide.createIcons();
+      showToast(it ? '事例を更新しました' : '事例を追加しました');
+    }
+  });
+}
+function toggleGuideHidden(kind, id, extra) {
+  if (kind === 'cat') { const c = findGuideCat(id); if (c) c.hidden = !c.hidden; }
+  else { const f = findGuideItem(extra, id); if (f) f.it.hidden = !f.it.hidden; }
+  save(); renderAll(); lucide.createIcons(); showToast('公開設定を切り替えました');
+}
+function deleteGuidePhoto(photoId, catId, itemId) {
+  const f = findGuideItem(catId, itemId); if (!f) return;
+  f.it.photos = (f.it.photos || []).filter(x => x.id !== photoId);
+  save(); renderGuide(); lucide.createIcons(); showToast('写真を削除しました（元に戻すには「変更を元に戻す」）');
+}
+
 function openStepEditor(kind, id) {
   const block = D.manual[kind];
   const st = id ? findStep(kind, id) : null;
@@ -2597,7 +3068,6 @@ function delCategory(i) {
   const c = D.categories[i]; if (!c) return;
   const used = D.posts.filter(p => p.category === c.name).length;
   if (used) { showToast('「' + c.name + '」は' + used + '件の投稿で使用中のため削除できません'); return; }
-  if (!confirm('カテゴリー「' + c.name + '」を削除しますか？')) return;
   D.categories.splice(i, 1); save(); renderAll(); showToast('削除しました');
 }
 
@@ -2606,9 +3076,8 @@ function removeAt(kind, id, extra) {
   const names = {
     'quick': 'このカード', 'post': 'この投稿', 'group': 'この大カテゴリー', 'sub': 'この小カテゴリー',
     'item': 'この品目', 'step': 'この業務', 'exp': 'この項目', 'tool': 'このリンク', 'block': 'この項目',
-    'orgdept': 'この部署', 'orgrole': 'この役職'
+    'orgdept': 'この部署', 'orgrole': 'この役職', 'gcat': 'このカテゴリー', 'gitem': 'この事例'
   };
-  if (!confirm((names[kind] || 'この項目') + 'を削除しますか？')) return;
   if (kind === 'quick') D.quickCards = D.quickCards.filter(x => x.id !== id);
   if (kind === 'post') D.posts = D.posts.filter(x => x.id !== id);
   if (kind === 'group') D.price.groups = D.price.groups.filter(x => x.id !== id);
@@ -2620,7 +3089,9 @@ function removeAt(kind, id, extra) {
   if (kind === 'block') { const cs = (D.customSections || []).find(x => x.id === extra); if (cs) cs.blocks = cs.blocks.filter(x => x.id !== id); }
   if (kind === 'orgdept') D.org.departments = D.org.departments.filter(x => x.id !== id);
   if (kind === 'orgrole') { const d = findOrgDept(extra); if (d) d.roles = d.roles.filter(x => x.id !== id); }
-  save(); renderAll(); showToast('削除しました');
+  if (kind === 'gcat') D.guide.categories = D.guide.categories.filter(x => x.id !== id);
+  if (kind === 'gitem') { const c = findGuideCat(extra); if (c) c.items = c.items.filter(x => x.id !== id); }
+  save(); renderAll(); showToast('削除しました（元に戻すには「変更を元に戻す」）');
 }
 
 /* ---------- クリック委譲 ---------- */
@@ -2655,7 +3126,15 @@ document.addEventListener('click', e => {
     'orgrole-up': () => moveOrgRole(extra, id, -1), 'orgrole-down': () => moveOrgRole(extra, id, 1),
     'edit-orgroot': () => openOrgRootEditor(),
     'orgview-tree': () => { orgView = 'tree'; renderOrg(); lucide.createIcons(); },
-    'orgview-card': () => { orgView = 'card'; renderOrg(); lucide.createIcons(); }
+    'orgview-card': () => { orgView = 'card'; renderOrg(); lucide.createIcons(); },
+    'guide-home': openGuideHome, 'guide-cat': () => openGuideCat(id), 'guide-open': () => openGuideItem(extra, id),
+    'add-gcat': () => openGuideCatEditor(null), 'edit-gcat': () => openGuideCatEditor(id),
+    'del-gcat': () => { const gc = findGuideCat(id); if (gc && gc.ng) D.guide.ngRemoved = true; removeAt('gcat', id); },
+    'gcat-hide': () => toggleGuideHidden('cat', id),
+    'add-gitem': () => openGuideItemEditor(id, null), 'edit-gitem': () => openGuideItemEditor(extra, id), 'del-gitem': () => removeAt('gitem', id, extra),
+    'gitem-hide': () => toggleGuideHidden('item', id, extra),
+    'guide-photo-add': () => pickImages('guide', id, extra), 'guide-photo-swap': () => pickImages('guide-swap', id, extra),
+    'gphoto-del': () => deleteGuidePhoto(id, extra, el.dataset.block)
   };
   if (map[act]) { e.preventDefault(); map[act](); }
 });
@@ -2743,9 +3222,18 @@ document.addEventListener('input', e => {
     h.textContent = s.msg;
     h.className = 'mt-1.5 text-[11px] font-bold ' + (s.ok ? 'text-emerald-400' : 'text-slate-400');
   }
+  if (e.target && e.target.id === 'guideSearch') guideSearchInput();
 });
 document.addEventListener('change', e => {
   const el = e.target;
+  if (el && el.dataset && el.dataset.gphotocap) {
+    const f = findGuideItem(el.dataset.extra, el.dataset.block);
+    if (f) {
+      const ph = (f.it.photos || []).find(x => x.id === el.dataset.gphotocap);
+      if (ph) { ph.caption = el.value.trim(); save(); showToast('写真の説明を保存しました'); }
+    }
+    return;
+  }
   if (!el || !el.dataset || !el.dataset.imgcap) return;
   const cs = (D.customSections || []).find(x => x.id === el.dataset.extra);
   if (!cs) return;
